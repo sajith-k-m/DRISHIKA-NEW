@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drishika - Forestry & Nature Q&A</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #2d5016;
+            --secondary-green: #4a7c59;
+            --light-green: #7fb069;
+            --accent-green: #a7c957;
+            --earth-brown: #8b5a3c;
+            --light-brown: #d4a574;
+            --background: #f8faf6;
+            --card-bg: #ffffff;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --border: #e0e6ed;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--background);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background-image: url("green.jpg");
+            color: #FFFFFF; /* Pure White */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6); /* Dark shadow for depth */;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #FFFFFF; /* Pure White */
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Dark shadow for depth */
+            font-weight: bold; /* Make font slightly bolder */
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-green);
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            
+            /* ADDED: A semi-transparent white background */
+            background: rgba(255, 255, 255, 0.2); 
+            
+            /* ADDED: A subtle border to define its shape */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            width: 300px;
+            
+            /* ADDED: A subtle blur effect for a modern look */
+            backdrop-filter: blur(4px);
+        }
+
+        .search-bar i {
+            /* Make the search icon clearly visible */
+            color: white; 
+        }
+
+        .search-bar input {
+            background: none;
+            border: none;
+            
+            /* Make the text typed by the user white */
+            color: #FFFFFF; 
+            
+            width: 100%;
+            outline: none;
+            margin-left: 0.5rem; /* Added some space between the icon and text */
+        }
+
+        /* Corrected placeholder text color */
+        .search-bar input::placeholder {
+        color: rgba(255, 255, 255, 0.85); /* CORRECTED: Fixed syntax and made it a bit brighter */
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .ask-question-btn {
+            background: linear-gradient(135deg, var(--accent-green), var(--light-green));
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .ask-question-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-tab {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-tab.active {
+            background: var(--light-green);
+            color: white;
+            border-color: var(--light-green);
+        }
+
+        .question-card {
+            border-left: 4px solid var(--accent-green);
+            margin-bottom: 1rem;
+            transition: transform 0.3s;
+        }
+
+        .question-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--light-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .user-details {
+            flex-grow: 1;
+        }
+
+        .username {
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+
+        .timestamp {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .verified-badge {
+            background: var(--earth-brown);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .question-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .question-content {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .question-tags {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: var(--accent-green);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .question-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: color 0.3s;
+        }
+
+        .action-btn:hover {
+            color: var(--secondary-green);
+        }
+
+        .stats {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .categories-widget h3,
+        .leaderboard-widget h3 {
+            color: var(--primary-green);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category-list {
+            list-style: none;
+        }
+
+        .category-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .category-list li:hover {
+            color: var(--secondary-green);
+        }
+
+        .category-count {
+            background: var(--accent-green);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .rank {
+            font-weight: bold;
+            color: var(--earth-brown);
+            width: 20px;
+        }
+
+        .points {
+            color: var(--secondary-green);
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--light-green);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .file-upload {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover {
+            border-color: var(--light-green);
+            background: rgba(127, 176, 105, 0.1);
+        }
+
+        .btn-primary {
+            background: var(--light-green);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-green);
+        }
+
+        .btn-secondary {
+            background: var(--text-light);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-right: 1rem;
+        }
+
+        .answer-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .answer-card {
+            background: rgba(127, 176, 105, 0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--light-green);
+        }
+
+        .answer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+
+        .answer-content {
+            margin-bottom: 0.8rem;
+            line-height: 1.6;
+        }
+
+        .answer-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .reply-form {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            border: 2px dashed var(--border);
+        }
+
+        .reply-form textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 0.8rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .reply-form textarea:focus {
+            outline: none;
+            border-color: var(--light-green);
+        }
+
+        .show-answers-btn {
+            background: var(--accent-green);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 1rem;
+        }
+
+        .show-answers-btn:hover {
+            background: var(--light-green);
+        }
+
+        .answers-container {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .answers-container.show {
+            display: block;
+        }
+
+        .vote-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            margin-right: 1rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .vote-btn:hover {
+            border-color: var(--light-green);
+            color: var(--light-green);
+        }
+
+        .vote-btn.voted {
+            background: var(--light-green);
+            color: white;
+            border-color: var(--light-green);
+        }
+
+        .notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--light-green);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            transform: translateX(100%);
+            transition: transform 0.3s;
+            z-index: 1500;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            .nav-container {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .search-bar {
+                width: 100%;
+                order: 3;
+            }
+
+            .filter-tabs {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-tree"></i>
+                Driഷിക
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search questions, topics..." id="searchInput">
+            </div>
+            <div class="nav-links">
+                <a href="#" onclick="showLogin()"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <a href="#" onclick="showSignup()"><i class="fas fa-user-plus"></i> Sign Up</a>
+                <a href="#" onclick="showProfile()"><i class="fas fa-user"></i> Profile</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <main class="main-content">
+            <button class="ask-question-btn" onclick="showAskQuestion()">
+                <i class="fas fa-plus"></i>
+                Ask a Question
+            </button>
+
+            <div class="filter-tabs">
+                <div class="filter-tab active" onclick="filterQuestions('newest')">Newest</div>
+                <div class="filter-tab" onclick="filterQuestions('trending')">Trending</div>
+                <div class="filter-tab" onclick="filterQuestions('verified')">Verified</div>
+                <div class="filter-tab" onclick="filterQuestions('unanswered')">Unanswered</div>
+            </div>
+
+            <div id="questionsContainer">
+                <!-- Questions will be dynamically loaded here -->
+            </div>
+        </main>
+
+        <aside class="sidebar">
+            <div class="card categories-widget">
+                <h3><i class="fas fa-tags"></i> Popular Categories</h3>
+                <ul class="category-list">
+                    <li onclick="filterByCategory('wildlife')">
+                        Wildlife <span class="category-count">156</span>
+                    </li>
+                    <li onclick="filterByCategory('forests')">
+                        Forests <span class="category-count">203</span>
+                    </li>
+                    <li onclick="filterByCategory('conservation')">
+                        Conservation <span class="category-count">89</span>
+                    </li>
+                    <li onclick="filterByCategory('botany')">
+                        Botany <span class="category-count">124</span>
+                    </li>
+                    <li onclick="filterByCategory('ecology')">
+                        Ecology <span class="category-count">78</span>
+                    </li>
+                    <li onclick="filterByCategory('climate')">
+                        Climate Change <span class="category-count">92</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card leaderboard-widget">
+                <h3><i class="fas fa-trophy"></i> Top Contributors</h3>
+                <div class="leaderboard-item">
+                    <span class="rank">1</span>
+                    <div class="avatar">DR</div>
+                    <div>
+                        <div class="username">Dr. Rajesh Kumar</div>
+                        <div class="points">2,450 pts</div>
+                    </div>
+                </div>
+                <div class="leaderboard-item">
+                    <span class="rank">2</span>
+                    <div class="avatar">PM</div>
+                    <div>
+                        <div class="username">Priya Menon</div>
+                        <div class="points">1,876 pts</div>
+                    </div>
+                </div>
+                <div class="leaderboard-item">
+                    <span class="rank">3</span>
+                    <div class="avatar">AS</div>
+                    <div>
+                        <div class="username">Arjun Sasi</div>
+                        <div class="points">1,523 pts</div>
+                    </div>
+                </div>
+                <div class="leaderboard-item">
+                    <span class="rank">4</span>
+                    <div class="avatar">NK</div>
+                    <div>
+                        <div class="username">Nisha Krishnan</div>
+                        <div class="points">1,287 pts</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Ask Question Modal -->
+    <div id="askQuestionModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">
+                <i class="fas fa-question-circle"></i> Ask a Question
+            </h2>
+            <form id="questionForm">
+                <div class="form-group">
+                    <label for="questionTitle">Question Title *</label>
+                    <input type="text" id="questionTitle" required placeholder="What would you like to know?">
+                </div>
+                <div class="form-group">
+                    <label for="questionContent">Question Details</label>
+                    <textarea id="questionContent" placeholder="Provide more details about your question..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="questionCategory">Category *</label>
+                    <select id="questionCategory" required>
+                        <option value="">Select a category</option>
+                        <option value="wildlife">Wildlife</option>
+                        <option value="forests">Forests</option>
+                        <option value="conservation">Conservation</option>
+                        <option value="botany">Botany</option>
+                        <option value="ecology">Ecology</option>
+                        <option value="climate">Climate Change</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="questionTags">Tags (comma-separated)</label>
+                    <input type="text" id="questionTags" placeholder="e.g., trees, biodiversity, ecosystem">
+                </div>
+                <div class="form-group">
+                    <label>Attach Media</label>
+                    <div class="file-upload" onclick="document.getElementById('mediaUpload').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click to upload images or videos</p>
+                        <input type="file" id="mediaUpload" style="display: none;" multiple accept="image/*,video/*">
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <button type="button" class="btn-secondary" onclick="closeModal('askQuestionModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Post Question</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <div style="text-align: center; margin-bottom: 1rem;">
+                    <button type="submit" class="btn-primary" style="width: 100%;">Login</button>
+                </div>
+                <div style="text-align: center;">
+                    <p>Don't have an account? <a href="#" onclick="closeModal('loginModal'); showSignup();" style="color: var(--light-green);">Sign up here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">
+                <i class="fas fa-user-plus"></i> Create Account
+            </h2>
+            <form id="signupForm">
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupBio">Bio (Optional)</label>
+                    <textarea id="signupBio" placeholder="Tell us about yourself..."></textarea>
+                </div>
+                <div style="text-align: center; margin-bottom: 1rem;">
+                    <button type="submit" class="btn-primary" style="width: 100%;">Create Account</button>
+                </div>
+                <div style="text-align: center;">
+                    <p>Already have an account? <a href="#" onclick="closeModal('signupModal'); showLogin();" style="color: var(--light-green);">Login here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Sample data
+        let currentUser = null;
+        let questions = [
+            {
+                id: 1,
+                title: "What are the key indicators of a healthy forest ecosystem?",
+                content: "I'm working on a project about forest health assessment and would like to know the main biological and environmental indicators that scientists use to determine ecosystem health.",
+                author: "Priya Menon",
+                authorInitials: "PM",
+                timestamp: "2 hours ago",
+                verified: false,
+                category: "forests",
+                tags: ["ecosystem", "biodiversity", "assessment"],
+                upvotes: 12,
+                answers: 3,
+                views: 89,
+                bookmarked: false,
+                replies: [
+                    {
+                        id: 101,
+                        content: "Key indicators include species diversity (both flora and fauna), canopy coverage, soil health metrics like pH and organic matter content, water quality in streams, and the presence of indicator species. Also monitor for invasive species and disease prevalence.",
+                        author: "Dr. Rajesh Kumar",
+                        authorInitials: "DR",
+                        timestamp: "1 hour ago",
+                        verified: true,
+                        upvotes: 8,
+                        downvotes: 0
+                    },
+                    {
+                        id: 102,
+                        content: "Don't forget about mycorrhizal networks! The fungal connections between tree roots are crucial for nutrient exchange and forest communication. Healthy forests have extensive mycorrhizal diversity.",
+                        author: "Arjun Sasi",
+                        authorInitials: "AS",
+                        timestamp: "45 minutes ago",
+                        verified: false,
+                        upvotes: 5,
+                        downvotes: 0
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: "How does deforestation affect local wildlife migration patterns?",
+                content: "I've noticed changes in bird migration routes in our area after recent logging activities. Can someone explain the scientific relationship between habitat loss and migration patterns?",
+                author: "Dr. Rajesh Kumar",
+                authorInitials: "DR",
+                timestamp: "5 hours ago",
+                verified: true,
+                category: "wildlife",
+                tags: ["migration", "deforestation", "birds"],
+                upvotes: 18,
+                answers: 7,
+                views: 156,
+                bookmarked: false,
+                replies: [
+                    {
+                        id: 201,
+                        content: "Deforestation creates habitat fragmentation, forcing birds to find alternative routes. This increases energy expenditure and can disrupt traditional stopover sites. Many species show remarkable adaptability, but some specialized species struggle more than generalists.",
+                        author: "Nisha Krishnan",
+                        authorInitials: "NK",
+                        timestamp: "4 hours ago",
+                        verified: false,
+                        upvotes: 12,
+                        downvotes: 1
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: "Best native plants for reforestation in Western Ghats?",
+                content: "Planning a community reforestation project in Kerala's Western Ghats. Looking for recommendations on fast-growing native species that support local wildlife.",
+                author: "Arjun Sasi",
+                authorInitials: "AS",
+                timestamp: "1 day ago",
+                verified: false,
+                category: "conservation",
+                tags: ["reforestation", "native plants", "western ghats"],
+                upvotes: 25,
+                answers: 12,
+                views: 234,
+                bookmarked: false,
+                replies: []
+            },
+            {
+                id: 4,
+                title: "Identification help: Unknown flowering plant in Kerala forests",
+                content: "Found this beautiful flowering plant during our NSS nature walk. White flowers with 5 petals, grows about 2 feet tall. Can someone help identify?",
+                author: "Nisha Krishnan",
+                authorInitials: "NK",
+                timestamp: "2 days ago",
+                verified: false,
+                category: "botany",
+                tags: ["identification", "flowers", "kerala"],
+                upvotes: 8,
+                answers: 4,
+                views: 67,
+                bookmarked: false,
+                replies: []
+            }
+        ];
+
+        let currentFilter = 'newest';
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadQuestions();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                filterQuestionsBySearch(query);
+            });
+
+            // Form submissions
+            document.getElementById('questionForm').addEventListener('submit', handleQuestionSubmit);
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('signupForm').addEventListener('submit', handleSignup);
+
+            // Close modals when clicking outside
+            window.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    e.target.classList.remove('active');
+                }
+            });
+        }
+
+        function loadQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            let filteredQuestions = [...questions];
+
+            // Apply filters
+            switch(currentFilter) {
+                case 'trending':
+                    filteredQuestions.sort((a, b) => (b.upvotes + b.answers) - (a.upvotes + a.answers));
+                    break;
+                case 'verified':
+                    filteredQuestions = filteredQuestions.filter(q => q.verified);
+                    break;
+                case 'unanswered':
+                    filteredQuestions = filteredQuestions.filter(q => q.answers === 0);
+                    break;
+                default:
+                    filteredQuestions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            }
+
+            filteredQuestions.forEach(question => {
+                container.appendChild(createQuestionCard(question));
+            });
+        }
+
+        function createQuestionCard(question) {
+            const card = document.createElement('div');
+            card.className = 'card question-card';
+            card.innerHTML = `
+                <div class="user-info">
+                    <div class="avatar">${question.authorInitials}</div>
+                    <div class="user-details">
+                        <div class="username">${question.author}</div>
+                        <div class="timestamp">${question.timestamp}</div>
+                    </div>
+                    ${question.verified ? '<div class="verified-badge"><i class="fas fa-check-circle"></i> Verified</div>' : ''}
+                </div>
+                <h3 class="question-title">${question.title}</h3>
+                <p class="question-content">${question.content}</p>
+                <div class="question-tags">
+                    ${question.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                </div>
+                <div class="question-actions">
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="toggleUpvote(${question.id})">
+                            <i class="fas fa-arrow-up"></i> ${question.upvotes}
+                        </button>
+                        <button class="action-btn" onclick="toggleAnswers(${question.id})">
+                            <i class="fas fa-comment"></i> ${question.replies.length} Answers
+                        </button>
+                        <button class="action-btn" onclick="toggleBookmark(${question.id})">
+                            <i class="fas fa-bookmark${question.bookmarked ? '' : '-o'}"></i> ${question.bookmarked ? 'Saved' : 'Save'}
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-share"></i> Share
+                        </button>
+                    </div>
+                    <div class="stats">${question.views} views</div>
+                </div>
+                
+                ${question.replies.length > 0 ? `
+                    <button class="show-answers-btn" onclick="toggleAnswers(${question.id})">
+                        <i class="fas fa-chevron-down"></i> Show ${question.replies.length} Answer${question.replies.length > 1 ? 's' : ''}
+                    </button>
+                ` : ''}
+                
+                <div class="answers-container" id="answers-${question.id}">
+                    ${createAnswersHTML(question.replies)}
+                    
+                    <div class="reply-form">
+                        <textarea placeholder="Write your answer..." id="replyText-${question.id}"></textarea>
+                        <div style="margin-top: 0.5rem; text-align: right;">
+                            <button class="btn-primary" onclick="submitReply(${question.id})">
+                                <i class="fas fa-reply"></i> Post Answer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function createAnswersHTML(replies) {
+            return replies.map(reply => `
+                <div class="answer-card">
+                    <div class="answer-header">
+                        <div class="user-info">
+                            <div class="avatar">${reply.authorInitials}</div>
+                            <div class="user-details">
+                                <div class="username">${reply.author}</div>
+                                <div class="timestamp">${reply.timestamp}</div>
+                            </div>
+                            ${reply.verified ? '<div class="verified-badge"><i class="fas fa-check-circle"></i> Verified</div>' : ''}
+                        </div>
+                    </div>
+                    <div class="answer-content">${reply.content}</div>
+                    <div class="answer-actions">
+                        <div class="vote-buttons">
+                            <button class="vote-btn" onclick="voteReply(${reply.id}, 'up')">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <span class="vote-count">${reply.upvotes - reply.downvotes}</span>
+                            <button class="vote-btn" onclick="voteReply(${reply.id}, 'down')">
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                        </div>
+                        <button class="action-btn">
+                            <i class="fas fa-reply"></i> Reply
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-share"></i> Share
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterQuestions(filter) {
+            // Update active tab
+            document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            currentFilter = filter;
+            loadQuestions();
+        }
+
+        function filterByCategory(category) {
+            const filteredQuestions = questions.filter(q => q.category === category);
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+            filteredQuestions.forEach(question => {
+                container.appendChild(createQuestionCard(question));
+            });
+        }
+
+        function filterQuestionsBySearch(query) {
+            if (!query) {
+                loadQuestions();
+                return;
+            }
+
+            const filteredQuestions = questions.filter(q => 
+                q.title.toLowerCase().includes(query) ||
+                q.content.toLowerCase().includes(query) ||
+                q.tags.some(tag => tag.toLowerCase().includes(query))
+            );
+            
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+            filteredQuestions.forEach(question => {
+                container.appendChild(createQuestionCard(question));
+            });
+        }
+
+        function toggleUpvote(questionId) {
+            const question = questions.find(q => q.id === questionId);
+            if (question) {
+                question.upvotes += 1;
+                loadQuestions();
+                showNotification('Question upvoted!');
+            }
+        }
+
+        function toggleBookmark(questionId) {
+            const question = questions.find(q => q.id === questionId);
+            if (question) {
+                question.bookmarked = !question.bookmarked;
+                loadQuestions();
+                showNotification(question.bookmarked ? 'Question saved!' : 'Question removed from saved');
+            }
+        }
+
+        function showAnswers(questionId) {
+            // In a real app, this would show the answers modal or navigate to question detail page
+            showNotification('Answers feature coming soon!');
+        }
+
+        function toggleAnswers(questionId) {
+            const answersContainer = document.getElementById(`answers-${questionId}`);
+            const btn = event.target.closest('.show-answers-btn');
+            
+            if (answersContainer.classList.contains('show')) {
+                answersContainer.classList.remove('show');
+                btn.innerHTML = `<i class="fas fa-chevron-down"></i> Show Answers`;
+            } else {
+                answersContainer.classList.add('show');
+                btn.innerHTML = `<i class="fas fa-chevron-up"></i> Hide Answers`;
+            }
+        }
+
+        function submitReply(questionId) {
+            if (!currentUser) {
+                showNotification('Please log in to post an answer');
+                showLogin();
+                return;
+            }
+
+            const replyText = document.getElementById(`replyText-${questionId}`).value.trim();
+            if (!replyText) {
+                showNotification('Please enter your answer');
+                return;
+            }
+
+            const question = questions.find(q => q.id === questionId);
+            if (question) {
+                const newReply = {
+                    id: Date.now(), // Simple ID generation
+                    content: replyText,
+                    author: currentUser.name,
+                    authorInitials: currentUser.name.split(' ').map(n => n[0]).join(''),
+                    timestamp: 'Just now',
+                    verified: false, // Could be true for verified users
+                    upvotes: 0,
+                    downvotes: 0
+                };
+
+                question.replies.push(newReply);
+                document.getElementById(`replyText-${questionId}`).value = '';
+                loadQuestions();
+                showNotification('Answer posted successfully!');
+            }
+        }
+
+        function voteReply(replyId, direction) {
+            if (!currentUser) {
+                showNotification('Please log in to vote');
+                showLogin();
+                return;
+            }
+
+            // Find the reply across all questions
+            for (let question of questions) {
+                const reply = question.replies.find(r => r.id === replyId);
+                if (reply) {
+                    if (direction === 'up') {
+                        reply.upvotes += 1;
+                    } else {
+                        reply.downvotes += 1;
+                    }
+                    loadQuestions();
+                    showNotification(`Answer ${direction}voted!`);
+                    return;
+                }
+            }
+        }
+
+        function showAskQuestion() {
+            document.getElementById('askQuestionModal').classList.add('active');
+        }
+
+        function showLogin() {
+            document.getElementById('loginModal').classList.add('active');
+        }
+
+        function showSignup() {
+            document.getElementById('signupModal').classList.add('active');
+        }
+
+        function showProfile() {
+            if (!currentUser) {
+                showNotification('Please log in first');
+                showLogin();
+                return;
+            }
+            showNotification('Profile feature coming soon!');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function handleQuestionSubmit(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('questionTitle').value;
+            const content = document.getElementById('questionContent').value;
+            const category = document.getElementById('questionCategory').value;
+            const tags = document.getElementById('questionTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+
+            if (!title || !category) {
+                showNotification('Please fill in all required fields');
+                return;
+            }
+
+            const newQuestion = {
+                id: questions.length + 1,
+                title: title,
+                content: content,
+                author: currentUser ? currentUser.name : 'Anonymous User',
+                authorInitials: currentUser ? currentUser.name.split(' ').map(n => n[0]).join('') : 'AU',
+                timestamp: 'Just now',
+                verified: false,
+                category: category,
+                tags: tags,
+                upvotes: 0,
+                answers: 0,
+                views: 1,
+                bookmarked: false
+            };
+
+            questions.unshift(newQuestion);
+            loadQuestions();
+            closeModal('askQuestionModal');
+            document.getElementById('questionForm').reset();
+            showNotification('Question posted successfully!');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            // Simulate login
+            currentUser = {
+                name: 'John Doe',
+                email: email,
+                bio: 'Nature enthusiast and environmental science student'
+            };
+
+            closeModal('loginModal');
+            updateNavigation();
+            showNotification('Welcome back!');
+        }
+
+        function handleSignup(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const bio = document.getElementById('signupBio').value;
+
+            // Simulate signup
+            currentUser = {
+                name: name,
+                email: email,
+                bio: bio || 'New member of the EcoQuest community'
+            };
+
+            closeModal('signupModal');
+            updateNavigation();
+            showNotification('Account created successfully! Welcome to EcoQuest!');
+        }
+
+        function updateNavigation() {
+            const navLinks = document.querySelector('.nav-links');
+            if (currentUser) {
+                navLinks.innerHTML = `
+                    <a href="#" onclick="showProfile()"><i class="fas fa-user"></i> ${currentUser.name}</a>
+                    <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                `;
+            } else {
+                navLinks.innerHTML = `
+                    <a href="#" onclick="showLogin()"><i class="fas fa-sign-in-alt"></i> Login</a>
+                    <a href="#" onclick="showSignup()"><i class="fas fa-user-plus"></i> Sign Up</a>
+                    <a href="#" onclick="showProfile()"><i class="fas fa-user"></i> Profile</a>
+                `;
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            updateNavigation();
+            showNotification('Logged out successfully');
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Infinite scroll simulation
+        window.addEventListener('scroll', function() {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
+                // Load more questions (simulation)
+                console.log('Loading more questions...');
+            }
+        });
+
+        // File upload preview
+        document.getElementById('mediaUpload').addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                const fileUpload = document.querySelector('.file-upload');
+                fileUpload.innerHTML = `
+                    <i class="fas fa-check-circle" style="color: var(--light-green);"></i>
+                    <p>${files.length} file(s) selected</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
