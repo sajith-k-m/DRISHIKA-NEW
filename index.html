@@ -1015,11 +1015,11 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
                     <div class="answer-content">${reply.content}</div>
                     <div class="answer-actions">
                         <div class="vote-buttons">
-                            <button class="vote-btn" onclick="voteReply(${reply.id}, 'up')">
+                            <button class="vote-btn reply-upvote-btn" data-replyid="${reply.id}">
                                 <i class="fas fa-arrow-up"></i>
                             </button>
                             <span class="vote-count">${reply.upvotes - reply.downvotes}</span>
-                            <button class="vote-btn" onclick="voteReply(${reply.id}, 'down')">
+                            <button class="vote-btn reply-downvote-btn" data-replyid="${reply.id}">
                                 <i class="fas fa-arrow-down"></i>
                             </button>
                         </div>
@@ -1061,6 +1061,20 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
                 btn.addEventListener('click', function() {
                     const qid = this.getAttribute('data-qid');
                     submitReply(qid);
+                });
+            });
+            // Reply upvote
+            document.querySelectorAll('.reply-upvote-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const replyId = this.getAttribute('data-replyid');
+                    voteReply(Number(replyId), 'up');
+                });
+            });
+            // Reply downvote
+            document.querySelectorAll('.reply-downvote-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const replyId = this.getAttribute('data-replyid');
+                    voteReply(Number(replyId), 'down');
                 });
             });
         }
