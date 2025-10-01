@@ -830,6 +830,7 @@
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
         // TODO: Add SDKs for Firebase products that you want to use
         // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -961,7 +962,7 @@
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     currentUser = {
-                        name: user.displayName || 'User',
+                        name: user.displayName || (user.email ? user.email.split('@')[0] : 'User'),
                         email: user.email,
                         bio: 'Nature enthusiast and environmental science student'
                     };
@@ -998,26 +999,39 @@
             const container = document.getElementById('questionsContainer');
             container.innerHTML = '';
 
-            let filteredQuestions = [...questions];
+            // Fetch questions from Firestore
+            const q = query(collection(db, 'questions'), orderBy('timestamp', 'desc'));
+            getDocs(q)
+                .then((querySnapshot) => {
+                    let loadedQuestions = [];
+                    querySnapshot.forEach((doc) => {
+                        loadedQuestions.push({ id: doc.id, ...doc.data() });
+                    });
 
-            // Apply filters
-            switch(currentFilter) {
-                case 'trending':
-                    filteredQuestions.sort((a, b) => (b.upvotes + b.answers) - (a.upvotes + a.answers));
-                    break;
-                case 'verified':
-                    filteredQuestions = filteredQuestions.filter(q => q.verified);
-                    break;
-                case 'unanswered':
-                    filteredQuestions = filteredQuestions.filter(q => q.answers === 0);
-                    break;
-                default:
-                    filteredQuestions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            }
+                    let filteredQuestions = [...loadedQuestions];
 
-            filteredQuestions.forEach(question => {
-                container.appendChild(createQuestionCard(question));
-            });
+                    // Apply filters
+                    switch(currentFilter) {
+                        case 'trending':
+                            filteredQuestions.sort((a, b) => (b.upvotes + b.answers) - (a.upvotes + a.answers));
+                            break;
+                        case 'verified':
+                            filteredQuestions = filteredQuestions.filter(q => q.verified);
+                            break;
+                        case 'unanswered':
+                            filteredQuestions = filteredQuestions.filter(q => q.answers === 0);
+                            break;
+                        default:
+                            filteredQuestions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    }
+
+                    filteredQuestions.forEach(question => {
+                        container.appendChild(createQuestionCard(question));
+                    });
+                })
+                .catch((error) => {
+                    showNotification('Error loading questions: ' + error.message);
+                });
         }
 
         function createQuestionCard(question) {
@@ -1198,24 +1212,37 @@
                 return;
             }
 
-            const question = questions.find(q => q.id === questionId);
-            if (question) {
-                const newReply = {
-                    id: Date.now(), // Simple ID generation
-                    content: replyText,
-                    author: currentUser.name,
-                    authorInitials: currentUser.name.split(' ').map(n => n[0]).join(''),
-                    timestamp: 'Just now',
-                    verified: false, // Could be true for verified users
-                    upvotes: 0,
-                    downvotes: 0
-                };
-
-                question.replies.push(newReply);
-                document.getElementById(`replyText-${questionId}`).value = '';
-                loadQuestions();
-                showNotification('Answer posted successfully!');
-            }
+            // Find the question in Firestore and update its replies array
+            const questionDocRef = doc(db, 'questions', questionId);
+            getDoc(questionDocRef)
+                .then((docSnap) => {
+                    if (docSnap.exists()) {
+                        const newReply = {
+                            id: Date.now(),
+                            content: replyText,
+                            author: currentUser.name,
+                            authorInitials: currentUser.name.split(' ').map(n => n[0]).join(''),
+                            timestamp: new Date().toISOString(),
+                            verified: false,
+                            upvotes: 0,
+                            downvotes: 0
+                        };
+                        updateDoc(questionDocRef, {
+                            replies: arrayUnion(newReply)
+                        }).then(() => {
+                            document.getElementById(`replyText-${questionId}`).value = '';
+                            loadQuestions();
+                            showNotification('Answer posted successfully!');
+                        }).catch((error) => {
+                            showNotification('Error posting answer: ' + error.message);
+                        });
+                    } else {
+                        showNotification('Question not found.');
+                    }
+                })
+                .catch((error) => {
+                    showNotification('Error finding question: ' + error.message);
+                });
         }
 
         function voteReply(replyId, direction) {
@@ -1268,7 +1295,6 @@
 
         function handleQuestionSubmit(e) {
             e.preventDefault();
-            
             const title = document.getElementById('questionTitle').value;
             const content = document.getElementById('questionContent').value;
             const category = document.getElementById('questionCategory').value;
@@ -1280,26 +1306,31 @@
             }
 
             const newQuestion = {
-                id: questions.length + 1,
                 title: title,
                 content: content,
                 author: currentUser ? currentUser.name : 'Anonymous User',
                 authorInitials: currentUser ? currentUser.name.split(' ').map(n => n[0]).join('') : 'AU',
-                timestamp: 'Just now',
+                timestamp: new Date().toISOString(),
                 verified: false,
                 category: category,
                 tags: tags,
                 upvotes: 0,
                 answers: 0,
                 views: 1,
-                bookmarked: false
+                bookmarked: false,
+                replies: []
             };
 
-            questions.unshift(newQuestion);
-            loadQuestions();
-            closeModal('askQuestionModal');
-            document.getElementById('questionForm').reset();
-            showNotification('Question posted successfully!');
+            addDoc(collection(db, 'questions'), newQuestion)
+                .then(() => {
+                    showNotification('Question posted successfully!');
+                    closeModal('askQuestionModal');
+                    document.getElementById('questionForm').reset();
+                    loadQuestions();
+                })
+                .catch((error) => {
+                    showNotification('Error posting question: ' + error.message);
+                });
         }
 
         function handleLogin(e) {
@@ -1314,7 +1345,7 @@
                     // Signed in
                     const user = userCredential.user;
                     currentUser = {
-                        name: user.displayName || 'User',
+                        name: user.displayName || (user.email ? user.email.split('@')[0] : 'User'),
                         email: user.email,
                         bio: 'Nature enthusiast and environmental science student'
                     };
@@ -1340,14 +1371,32 @@
                 .then((userCredential) => {
                     // Signed up
                     const user = userCredential.user;
-                    currentUser = {
-                        name: name,
-                        email: email,
-                        bio: bio || 'New member of the EcoQuest community'
-                    };
-                    closeModal('signupModal');
-                    updateNavigation();
-                    showNotification('Account created successfully! Welcome to EcoQuest!');
+                    // Set displayName in Firebase Auth profile
+                    if (user && user.updateProfile) {
+                        user.updateProfile({ displayName: name })
+                            .then(() => {
+                                currentUser = {
+                                    name: name,
+                                    email: email,
+                                    bio: bio || 'New member of the EcoQuest community'
+                                };
+                                closeModal('signupModal');
+                                updateNavigation();
+                                showNotification('Account created successfully! Welcome to EcoQuest!');
+                            })
+                            .catch((error) => {
+                                showNotification('Signup succeeded, but failed to set name: ' + error.message);
+                            });
+                    } else {
+                        currentUser = {
+                            name: name,
+                            email: email,
+                            bio: bio || 'New member of the EcoQuest community'
+                        };
+                        closeModal('signupModal');
+                        updateNavigation();
+                        showNotification('Account created successfully! Welcome to EcoQuest!');
+                    }
                 })
                 .catch((error) => {
                     showNotification(error.message);
