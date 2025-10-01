@@ -637,7 +637,7 @@
 
     <div class="container">
         <main class="main-content">
-            <button class="ask-question-btn" onclick="showAskQuestion()">
+            <button class="ask-question-btn" id="askQuestionBtn">
                 <i class="fas fa-plus"></i>
                 Ask a Question
             </button>
@@ -852,107 +852,7 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
         const analytics = getAnalytics(app);
         const db = getFirestore(app);
 
-                // Sample data
-                let currentUser = null;
-                let questions = [
-            {
-                id: 1,
-                title: "What are the key indicators of a healthy forest ecosystem?",
-                content: "I'm working on a project about forest health assessment and would like to know the main biological and environmental indicators that scientists use to determine ecosystem health.",
-                author: "Priya Menon",
-                authorInitials: "PM",
-                timestamp: "2 hours ago",
-                verified: false,
-                category: "forests",
-                tags: ["ecosystem", "biodiversity", "assessment"],
-                upvotes: 12,
-                answers: 3,
-                views: 89,
-                bookmarked: false,
-                replies: [
-                    {
-                        id: 101,
-                        content: "Key indicators include species diversity (both flora and fauna), canopy coverage, soil health metrics like pH and organic matter content, water quality in streams, and the presence of indicator species. Also monitor for invasive species and disease prevalence.",
-                        author: "Dr. Rajesh Kumar",
-                        authorInitials: "DR",
-                        timestamp: "1 hour ago",
-                        verified: true,
-                        upvotes: 8,
-                        downvotes: 0
-                    },
-                    {
-                        id: 102,
-                        content: "Don't forget about mycorrhizal networks! The fungal connections between tree roots are crucial for nutrient exchange and forest communication. Healthy forests have extensive mycorrhizal diversity.",
-                        author: "Arjun Sasi",
-                        authorInitials: "AS",
-                        timestamp: "45 minutes ago",
-                        verified: false,
-                        upvotes: 5,
-                        downvotes: 0
-                    }
-                ]
-            },
-            {
-                id: 2,
-                title: "How does deforestation affect local wildlife migration patterns?",
-                content: "I've noticed changes in bird migration routes in our area after recent logging activities. Can someone explain the scientific relationship between habitat loss and migration patterns?",
-                author: "Dr. Rajesh Kumar",
-                authorInitials: "DR",
-                timestamp: "5 hours ago",
-                verified: true,
-                category: "wildlife",
-                tags: ["migration", "deforestation", "birds"],
-                upvotes: 18,
-                answers: 7,
-                views: 156,
-                bookmarked: false,
-                replies: [
-                    {
-                        id: 201,
-                        content: "Deforestation creates habitat fragmentation, forcing birds to find alternative routes. This increases energy expenditure and can disrupt traditional stopover sites. Many species show remarkable adaptability, but some specialized species struggle more than generalists.",
-                        author: "Nisha Krishnan",
-                        authorInitials: "NK",
-                        timestamp: "4 hours ago",
-                        verified: false,
-                        upvotes: 12,
-                        downvotes: 1
-                    }
-                ]
-            },
-            {
-                id: 3,
-                title: "Best native plants for reforestation in Western Ghats?",
-                content: "Planning a community reforestation project in Kerala's Western Ghats. Looking for recommendations on fast-growing native species that support local wildlife.",
-                author: "Arjun Sasi",
-                authorInitials: "AS",
-                timestamp: "1 day ago",
-                verified: false,
-                category: "conservation",
-                tags: ["reforestation", "native plants", "western ghats"],
-                upvotes: 25,
-                answers: 12,
-                views: 234,
-                bookmarked: false,
-                replies: []
-            },
-            {
-                id: 4,
-                title: "Identification help: Unknown flowering plant in Kerala forests",
-                content: "Found this beautiful flowering plant during our NSS nature walk. White flowers with 5 petals, grows about 2 feet tall. Can someone help identify?",
-                author: "Nisha Krishnan",
-                authorInitials: "NK",
-                timestamp: "2 days ago",
-                verified: false,
-                category: "botany",
-                tags: ["identification", "flowers", "kerala"],
-                upvotes: 8,
-                answers: 4,
-                views: 67,
-                bookmarked: false,
-                replies: []
-            }
-        ];
-
+        let currentUser = null;
         let currentFilter = 'newest';
 
         // Initialize the application
@@ -981,6 +881,15 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
                 const query = this.value.toLowerCase();
                 filterQuestionsBySearch(query);
             });
+
+            // Ask a Question button
+            const askBtn = document.getElementById('askQuestionBtn');
+            if (askBtn) {
+                askBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showAskQuestion();
+                });
+            }
 
             // Form submissions
             document.getElementById('questionForm').addEventListener('submit', handleQuestionSubmit);
@@ -1028,6 +937,9 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
                     filteredQuestions.forEach(question => {
                         container.appendChild(createQuestionCard(question));
                     });
+
+                    // Attach event listeners for all Q&A actions
+                    attachQuestionEventListeners();
                 })
                 .catch((error) => {
                     showNotification('Error loading questions: ' + error.message);
@@ -1037,6 +949,7 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
         function createQuestionCard(question) {
             const card = document.createElement('div');
             card.className = 'card question-card';
+            const qid = String(question.id);
             card.innerHTML = `
                 <div class="user-info">
                     <div class="avatar">${question.authorInitials}</div>
@@ -1049,39 +962,34 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
                 <h3 class="question-title">${question.title}</h3>
                 <p class="question-content">${question.content}</p>
                 <div class="question-tags">
-                    ${question.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    ${(question.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
                 </div>
                 <div class="question-actions">
                     <div class="action-buttons">
-                        <button class="action-btn" onclick="toggleUpvote(${question.id})">
-                            <i class="fas fa-arrow-up"></i> ${question.upvotes}
+                        <button class="action-btn upvote-btn" data-qid="${qid}">
+                            <i class="fas fa-arrow-up"></i> <span class="upvote-count">${question.upvotes}</span>
                         </button>
-                        <button class="action-btn" onclick="toggleAnswers(${question.id})">
-                            <i class="fas fa-comment"></i> ${question.replies.length} Answers
+                        <button class="action-btn toggle-answers-btn" data-qid="${qid}">
+                            <i class="fas fa-comment"></i> <span class="answer-count">${(question.replies ? question.replies.length : 0)}</span> Answers
                         </button>
-                        <button class="action-btn" onclick="toggleBookmark(${question.id})">
-                            <i class="fas fa-bookmark${question.bookmarked ? '' : '-o'}"></i> ${question.bookmarked ? 'Saved' : 'Save'}
+                        <button class="action-btn bookmark-btn" data-qid="${qid}">
+                            <i class="fas fa-bookmark${question.bookmarked ? '' : '-o'}"></i> <span class="bookmark-label">${question.bookmarked ? 'Saved' : 'Save'}</span>
                         </button>
-                        <button class="action-btn">
+                        <button class="action-btn share-btn">
                             <i class="fas fa-share"></i> Share
                         </button>
                     </div>
                     <div class="stats">${question.views} views</div>
                 </div>
-                
-                ${question.replies.length > 0 ? `
-                    <button class="show-answers-btn" onclick="toggleAnswers(${question.id})">
-                        <i class="fas fa-chevron-down"></i> Show ${question.replies.length} Answer${question.replies.length > 1 ? 's' : ''}
-                    </button>
-                ` : ''}
-                
-                <div class="answers-container" id="answers-${question.id}">
-                    ${createAnswersHTML(question.replies)}
-                    
+                <button class="show-answers-btn" data-qid="${qid}" style="display:${(question.replies && question.replies.length > 0) ? 'block' : 'none'}">
+                    <i class="fas fa-chevron-down"></i> Show ${(question.replies ? question.replies.length : 0)} Answer${(question.replies && question.replies.length > 1) ? 's' : ''}
+                </button>
+                <div class="answers-container" id="answers-${qid}">
+                    ${createAnswersHTML(question.replies || [])}
                     <div class="reply-form">
-                        <textarea placeholder="Write your answer..." id="replyText-${question.id}"></textarea>
+                        <textarea placeholder="Write your answer..." id="replyText-${qid}"></textarea>
                         <div style="margin-top: 0.5rem; text-align: right;">
-                            <button class="btn-primary" onclick="submitReply(${question.id})">
+                            <button class="btn-primary reply-submit-btn" data-qid="${qid}">
                                 <i class="fas fa-reply"></i> Post Answer
                             </button>
                         </div>
@@ -1126,6 +1034,37 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
             `).join('');
         }
 
+        function attachQuestionEventListeners() {
+            // Upvote
+            document.querySelectorAll('.upvote-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const qid = this.getAttribute('data-qid');
+                    toggleUpvote(qid);
+                });
+            });
+            // Bookmark
+            document.querySelectorAll('.bookmark-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const qid = this.getAttribute('data-qid');
+                    toggleBookmark(qid);
+                });
+            });
+            // Toggle answers (both in action bar and show-answers-btn)
+            document.querySelectorAll('.toggle-answers-btn, .show-answers-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const qid = this.getAttribute('data-qid');
+                    toggleAnswers(qid, this);
+                });
+            });
+            // Submit reply
+            document.querySelectorAll('.reply-submit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const qid = this.getAttribute('data-qid');
+                    submitReply(qid);
+                });
+            });
+        }
+
         function filterQuestions(filter) {
             // Update active tab
             document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
@@ -1136,12 +1075,24 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
         }
 
         function filterByCategory(category) {
-            const filteredQuestions = questions.filter(q => q.category === category);
+            // Fetch questions from Firestore by category
             const container = document.getElementById('questionsContainer');
             container.innerHTML = '';
-            filteredQuestions.forEach(question => {
-                container.appendChild(createQuestionCard(question));
-            });
+            const q = query(collection(db, 'questions'), orderBy('timestamp', 'desc'));
+            getDocs(q)
+                .then((querySnapshot) => {
+                    let loadedQuestions = [];
+                    querySnapshot.forEach((doc) => {
+                        loadedQuestions.push({ id: doc.id, ...doc.data() });
+                    });
+                    const filteredQuestions = loadedQuestions.filter(q => q.category === category);
+                    filteredQuestions.forEach(question => {
+                        container.appendChild(createQuestionCard(question));
+                    });
+                })
+                .catch((error) => {
+                    showNotification('Error loading questions: ' + error.message);
+                });
         }
 
         function filterQuestionsBySearch(query) {
@@ -1149,36 +1100,84 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
                 loadQuestions();
                 return;
             }
-
-            const filteredQuestions = questions.filter(q => 
-                q.title.toLowerCase().includes(query) ||
-                q.content.toLowerCase().includes(query) ||
-                q.tags.some(tag => tag.toLowerCase().includes(query))
-            );
-            
-            const container = document.getElementById('questionsContainer');
-            container.innerHTML = '';
-            filteredQuestions.forEach(question => {
-                container.appendChild(createQuestionCard(question));
-            });
+            // Fetch all questions and filter client-side
+            const q = query(collection(db, 'questions'), orderBy('timestamp', 'desc'));
+            getDocs(q)
+                .then((querySnapshot) => {
+                    let loadedQuestions = [];
+                    querySnapshot.forEach((doc) => {
+                        loadedQuestions.push({ id: doc.id, ...doc.data() });
+                    });
+                    const filteredQuestions = loadedQuestions.filter(q => 
+                        q.title.toLowerCase().includes(query) ||
+                        q.content.toLowerCase().includes(query) ||
+                        (q.tags && q.tags.some(tag => tag.toLowerCase().includes(query)))
+                    );
+                    const container = document.getElementById('questionsContainer');
+                    container.innerHTML = '';
+                    filteredQuestions.forEach(question => {
+                        container.appendChild(createQuestionCard(question));
+                    });
+                })
+                .catch((error) => {
+                    showNotification('Error searching questions: ' + error.message);
+                });
         }
 
         function toggleUpvote(questionId) {
-            const question = questions.find(q => q.id === questionId);
-            if (question) {
-                question.upvotes += 1;
-                loadQuestions();
-                showNotification('Question upvoted!');
+            if (!currentUser) {
+                showNotification('Please log in to upvote');
+                showLogin();
+                return;
             }
+            // Update upvotes in Firestore
+            const questionDocRef = doc(db, 'questions', questionId);
+            getDoc(questionDocRef)
+                .then((docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        const newUpvotes = (data.upvotes || 0) + 1;
+                        updateDoc(questionDocRef, { upvotes: newUpvotes })
+                            .then(() => {
+                                loadQuestions();
+                                showNotification('Question upvoted!');
+                            })
+                            .catch((error) => {
+                                showNotification('Error upvoting: ' + error.message);
+                            });
+                    }
+                })
+                .catch((error) => {
+                    showNotification('Error finding question: ' + error.message);
+                });
         }
 
         function toggleBookmark(questionId) {
-            const question = questions.find(q => q.id === questionId);
-            if (question) {
-                question.bookmarked = !question.bookmarked;
-                loadQuestions();
-                showNotification(question.bookmarked ? 'Question saved!' : 'Question removed from saved');
+            if (!currentUser) {
+                showNotification('Please log in to bookmark');
+                showLogin();
+                return;
             }
+            // Toggle bookmark in Firestore
+            const questionDocRef = doc(db, 'questions', questionId);
+            getDoc(questionDocRef)
+                .then((docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        const newBookmarked = !data.bookmarked;
+                        updateDoc(questionDocRef, { bookmarked: newBookmarked })
+                            .then(() => {
+                                loadQuestions();
+                                showNotification(newBookmarked ? 'Question saved!' : 'Question removed from saved');
+                            })
+                            .catch((error) => {
+                                showNotification('Error bookmarking: ' + error.message);
+                            });
+                    }
+                })
+                .catch((error) => {
+                    showNotification('Error finding question: ' + error.message);
+                });
         }
 
         function showAnswers(questionId) {
@@ -1186,16 +1185,15 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
             showNotification('Answers feature coming soon!');
         }
 
-        function toggleAnswers(questionId) {
+        function toggleAnswers(questionId, btn) {
             const answersContainer = document.getElementById(`answers-${questionId}`);
-            const btn = event.target.closest('.show-answers-btn');
-            
+            if (!answersContainer) return;
             if (answersContainer.classList.contains('show')) {
                 answersContainer.classList.remove('show');
-                btn.innerHTML = `<i class="fas fa-chevron-down"></i> Show Answers`;
+                if (btn) btn.innerHTML = `<i class="fas fa-chevron-down"></i> Show Answers`;
             } else {
                 answersContainer.classList.add('show');
-                btn.innerHTML = `<i class="fas fa-chevron-up"></i> Hide Answers`;
+                if (btn) btn.innerHTML = `<i class="fas fa-chevron-up"></i> Hide Answers`;
             }
         }
 
@@ -1251,21 +1249,41 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
                 showLogin();
                 return;
             }
-
-            // Find the reply across all questions
-            for (let question of questions) {
-                const reply = question.replies.find(r => r.id === replyId);
-                if (reply) {
-                    if (direction === 'up') {
-                        reply.upvotes += 1;
-                    } else {
-                        reply.downvotes += 1;
+            // Find the question containing the reply in Firestore
+            const q = query(collection(db, 'questions'));
+            getDocs(q)
+                .then((querySnapshot) => {
+                    let found = false;
+                    querySnapshot.forEach((docSnap) => {
+                        const data = docSnap.data();
+                        if (data.replies && Array.isArray(data.replies)) {
+                            const replyIdx = data.replies.findIndex(r => r.id === replyId);
+                            if (replyIdx !== -1) {
+                                found = true;
+                                const replies = [...data.replies];
+                                if (direction === 'up') {
+                                    replies[replyIdx].upvotes = (replies[replyIdx].upvotes || 0) + 1;
+                                } else {
+                                    replies[replyIdx].downvotes = (replies[replyIdx].downvotes || 0) + 1;
+                                }
+                                updateDoc(doc(db, 'questions', docSnap.id), { replies })
+                                    .then(() => {
+                                        loadQuestions();
+                                        showNotification(`Answer ${direction}voted!`);
+                                    })
+                                    .catch((error) => {
+                                        showNotification('Error voting: ' + error.message);
+                                    });
+                            }
+                        }
+                    });
+                    if (!found) {
+                        showNotification('Reply not found.');
                     }
-                    loadQuestions();
-                    showNotification(`Answer ${direction}voted!`);
-                    return;
-                }
-            }
+                })
+                .catch((error) => {
+                    showNotification('Error voting: ' + error.message);
+                });
         }
 
         function showAskQuestion() {
@@ -1294,7 +1312,13 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
         }
 
         function handleQuestionSubmit(e) {
+            console.log('handleQuestionSubmit fired');
             e.preventDefault();
+            if (!currentUser) {
+                showNotification('Please log in to post a question');
+                showLogin();
+                return;
+            }
             const title = document.getElementById('questionTitle').value;
             const content = document.getElementById('questionContent').value;
             const category = document.getElementById('questionCategory').value;
@@ -1308,8 +1332,8 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
             const newQuestion = {
                 title: title,
                 content: content,
-                author: currentUser ? currentUser.name : 'Anonymous User',
-                authorInitials: currentUser ? currentUser.name.split(' ').map(n => n[0]).join('') : 'AU',
+                author: currentUser.name,
+                authorInitials: currentUser.name.split(' ').map(n => n[0]).join(''),
                 timestamp: new Date().toISOString(),
                 verified: false,
                 category: category,
@@ -1326,7 +1350,7 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
                     showNotification('Question posted successfully!');
                     closeModal('askQuestionModal');
                     document.getElementById('questionForm').reset();
-                    loadQuestions();
+                    setTimeout(() => loadQuestions(), 300); // slight delay for Firestore sync
                 })
                 .catch((error) => {
                     showNotification('Error posting question: ' + error.message);
