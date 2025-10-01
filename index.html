@@ -1,3 +1,12 @@
+        // Utility: Format date as DD/MM/YYYY
+        function formatDateDMY(dateString) {
+            const d = new Date(dateString);
+            if (isNaN(d)) return dateString;
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -764,12 +773,13 @@
         </div>
     </div>
 
-    <!-- Login Modal -->
+    <!-- Login Modal (with integrated Admin section) -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">
                 <i class="fas fa-sign-in-alt"></i> Login
             </h2>
+            <!-- User Login Form -->
             <form id="loginForm">
                 <div class="form-group">
                     <label for="loginEmail">Email</label>
@@ -785,7 +795,32 @@
                 <div style="text-align: center;">
                     <p>Don't have an account? <a href="#" onclick="closeModal('loginModal'); showSignup();" style="color: var(--light-green);">Sign up here</a></p>
                 </div>
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <span id="showAdminSection" style="color: var(--primary-green); cursor: pointer; font-weight: bold;">Admin</span>
+                </div>
             </form>
+            <!-- Admin Login Card (hidden by default) -->
+            <div id="adminLoginCard" style="display:none; margin-top:1.5rem; border:1px solid var(--border); border-radius:10px; padding:1.5rem; background:#f8faf6;">
+                <h3 style="color: var(--primary-green); margin-bottom: 1rem; text-align:center;">
+                    <i class="fas fa-user-shield"></i> Admin Login
+                </h3>
+                <form id="adminLoginFormInside">
+                    <div class="form-group">
+                        <label for="adminUsernameInside">Admin Username</label>
+                        <input type="text" id="adminUsernameInside" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPasswordInside">Password</label>
+                        <input type="password" id="adminPasswordInside" required>
+                    </div>
+                    <div style="text-align: center; margin-bottom: 1rem;">
+                        <button type="submit" class="btn-primary" style="width: 100%;">Login as Admin</button>
+                    </div>
+                    <div style="text-align: center;">
+                        <span id="backToUserLogin" style="color: var(--primary-green); cursor: pointer; font-weight: bold;">Back to User Login</span>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -878,6 +913,16 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
         let currentFilter = 'newest';
     let isAdmin = false;
 
+        // Utility: Format date as DD/MM/YYYY
+        function formatDateDMY(dateString) {
+            const d = new Date(dateString);
+            if (isNaN(d)) return dateString;
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             // Listen to Firebase Auth state ONCE on page load
@@ -900,6 +945,7 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
             setupEventListeners();
         });
 
+
         function setupEventListeners() {
             // Search functionality
             document.getElementById('searchInput').addEventListener('input', function() {
@@ -921,8 +967,48 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
             document.getElementById('signupForm').addEventListener('submit', handleSignup);
 
-            // Admin login form
-            document.getElementById('adminLoginForm').addEventListener('submit', handleAdminLogin);
+            // Admin login form (standalone modal, if still present)
+            const adminLoginForm = document.getElementById('adminLoginForm');
+            if (adminLoginForm) {
+                adminLoginForm.addEventListener('submit', handleAdminLogin);
+            }
+
+            // Admin login form inside login modal
+            const adminLoginFormInside = document.getElementById('adminLoginFormInside');
+            if (adminLoginFormInside) {
+                adminLoginFormInside.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const username = document.getElementById('adminUsernameInside').value.trim();
+                    const password = document.getElementById('adminPasswordInside').value;
+                    if (username === 'admin1234' && password === 'admin000') {
+                        isAdmin = true;
+                        currentUser = { name: 'admin1234', email: 'admin@admin.com', bio: 'Admin' };
+                        closeModal('loginModal');
+                        updateNavigation();
+                        showNotification('Logged in as admin!');
+                        showAdminDashboard();
+                    } else {
+                        showNotification('Invalid admin credentials');
+                    }
+                });
+            }
+
+            // Show admin login card inside login modal
+            const showAdminSection = document.getElementById('showAdminSection');
+            if (showAdminSection) {
+                showAdminSection.addEventListener('click', function() {
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('adminLoginCard').style.display = 'block';
+                });
+            }
+            // Back to user login from admin card
+            const backToUserLogin = document.getElementById('backToUserLogin');
+            if (backToUserLogin) {
+                backToUserLogin.addEventListener('click', function() {
+                    document.getElementById('adminLoginCard').style.display = 'none';
+                    document.getElementById('loginForm').style.display = 'block';
+                });
+            }
 
             // Close modals when clicking outside
             window.addEventListener('click', function(e) {
@@ -1011,7 +1097,7 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
                         <div class="admin-menu-dropdown" id="adminMenuDropdown-${qid}" style="display:none; position:absolute; right:0; top:30px; background:#fff; border:1px solid #e0e6ed; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.12); z-index:10; min-width:150px;">
                             <button class="admin-menu-item edit-question-btn" data-qid="${qid}" style="width:100%; background:none; border:none; padding:0.7rem 1rem; text-align:left; cursor:pointer; color:#2d5016;">Edit</button>
                             <button class="admin-menu-item delete-question-btn" data-qid="${qid}" style="width:100%; background:none; border:none; padding:0.7rem 1rem; text-align:left; cursor:pointer; color:#b22222;">Delete</button>
-                            <div style="padding:0.7rem 1rem; color:#888; font-size:0.95rem; border-top:1px solid #eee;">Posted: <span class="exact-time">${new Date(question.timestamp).toLocaleString()}</span></div>
+                            <div style="padding:0.7rem 1rem; color:#888; font-size:0.95rem; border-top:1px solid #eee;">Posted: <span class="exact-time">${formatDateDMY(question.timestamp)}</span></div>
                         </div>
                     </div>
                 `;
@@ -1021,12 +1107,17 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
             if (!isAdmin && currentUser && currentUser.name === question.author) {
                 userEditBtn = `<button class=\"action-btn user-edit-question-btn\" data-qid=\"${qid}\" style=\"color:#2d5016;\"><i class=\"fas fa-edit\"></i> Edit</button>`;
             }
+            // Admin edited badge
+            let adminEditedBadge = '';
+            if (question.editedByAdmin) {
+                adminEditedBadge = `<span style="background:#e0e6ed; color:#888; border-radius:8px; padding:2px 8px; font-size:0.85rem; margin-left:8px; display:inline-flex; align-items:center;"><i class='fas fa-check' style='font-size:0.9em; margin-right:4px;'></i>edited by admin</span>`;
+            }
             card.innerHTML = `
                 <div class="user-info" style="display:flex; align-items:center;">
                     <div class="avatar">${question.authorInitials}</div>
                     <div class="user-details">
-                        <div class="username">${question.author}</div>
-                        <div class="timestamp">${question.timestamp}</div>
+                        <div class="username">${question.author} ${adminEditedBadge}</div>
+                        <div class="timestamp">${formatDateDMY(question.timestamp)}</div>
                     </div>
                     ${question.verified ? '<div class="verified-badge"><i class="fas fa-check-circle"></i> Verified</div>' : ''}
                     ${adminMenu}
@@ -1086,7 +1177,7 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
                             <div class=\"avatar\">${reply.authorInitials}</div>
                             <div class=\"user-details\">
                                 <div class=\"username\">${reply.author}</div>
-                                <div class=\"timestamp\">${reply.timestamp}</div>
+                                <div class=\"timestamp\">${formatDateDMY(reply.timestamp)}</div>
                             </div>
                             ${reply.verified ? '<div class=\"verified-badge\"><i class=\"fas fa-check-circle\"></i> Verified</div>' : ''}
                         </div>
@@ -1276,12 +1367,12 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
                             const content = document.getElementById('questionContent').value;
                             const category = document.getElementById('questionCategory').value;
                             const tags = document.getElementById('questionTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
-                            updateDoc(questionDocRef, {
-                                title,
-                                content,
-                                category,
-                                tags
-                            }).then(() => {
+                            // If admin, set editedByAdmin flag
+                            let updateObj = { title, content, category, tags };
+                            if (isAdmin) {
+                                updateObj.editedByAdmin = true;
+                            }
+                            updateDoc(questionDocRef, updateObj).then(() => {
                                 showNotification('Question updated!');
                                 closeModal('askQuestionModal');
                                 form.onsubmit = handleQuestionSubmit;
@@ -1677,7 +1768,6 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
                     <a href="#" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
                     <a href="#" class="signup-btn"><i class="fas fa-user-plus"></i> Sign Up</a>
                     <a href="#" class="profile-btn"><i class="fas fa-user"></i> Profile</a>
-                    <a href="#" class="admin-login-btn"><i class="fas fa-user-shield"></i> Admin</a>
                 `;
             }
 
@@ -1690,8 +1780,7 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
             if (profileBtn) profileBtn.addEventListener('click', (e) => { e.preventDefault(); showProfile(); });
             const logoutBtn = navLinks.querySelector('.logout-btn');
             if (logoutBtn) logoutBtn.addEventListener('click', (e) => { e.preventDefault(); logout(); });
-            const adminLoginBtn = navLinks.querySelector('.admin-login-btn');
-            if (adminLoginBtn) adminLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showAdminLogin(); });
+            // Removed admin-login-btn from nav, so no event listener needed
             const adminDashboardBtn = navLinks.querySelector('.admin-dashboard-btn');
             if (adminDashboardBtn) adminDashboardBtn.addEventListener('click', (e) => { e.preventDefault(); showAdminDashboard(); });
 
@@ -1756,4 +1845,3 @@ import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/fire
     </script>
 </body>
 </html>
-
