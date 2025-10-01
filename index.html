@@ -824,10 +824,36 @@
 
     <div id="notification" class="notification"></div>
 
-    <script>
-        // Sample data
-        let currentUser = null;
-        let questions = [
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNv5uA7bHxm9IMJxynPfllbtJS6ljXKWM",
+            authDomain: "drishika-e39a2.firebaseapp.com",
+            projectId: "drishika-e39a2",
+            storageBucket: "drishika-e39a2.firebasestorage.app",
+            messagingSenderId: "512307002819",
+            appId: "1:512307002819:web:dd3e4e45af28f546eed176",
+            measurementId: "G-VKGQ3D13VQ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+                // Sample data
+                let currentUser = null;
+                let questions = [
             {
                 id: 1,
                 title: "What are the key indicators of a healthy forest ecosystem?",
@@ -930,6 +956,20 @@
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
+            // Listen to Firebase Auth state ONCE on page load
+            const auth = getAuth();
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = {
+                        name: user.displayName || 'User',
+                        email: user.email,
+                        bio: 'Nature enthusiast and environmental science student'
+                    };
+                } else {
+                    currentUser = null;
+                }
+                updateNavigation();
+            });
             loadQuestions();
             setupEventListeners();
         });
@@ -1264,62 +1304,93 @@
 
         function handleLogin(e) {
             e.preventDefault();
-            
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
-            // Simulate login
-            currentUser = {
-                name: 'John Doe',
-                email: email,
-                bio: 'Nature enthusiast and environmental science student'
-            };
-
-            closeModal('loginModal');
-            updateNavigation();
-            showNotification('Welcome back!');
+            // Firebase login
+            const auth = getAuth();
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // Signed in
+                    const user = userCredential.user;
+                    currentUser = {
+                        name: user.displayName || 'User',
+                        email: user.email,
+                        bio: 'Nature enthusiast and environmental science student'
+                    };
+                    closeModal('loginModal');
+                    updateNavigation();
+                    showNotification('Welcome back!');
+                })
+                .catch((error) => {
+                    showNotification(error.message);
+                });
         }
 
         function handleSignup(e) {
             e.preventDefault();
-            
             const name = document.getElementById('signupName').value;
             const email = document.getElementById('signupEmail').value;
             const password = document.getElementById('signupPassword').value;
             const bio = document.getElementById('signupBio').value;
 
-            // Simulate signup
-            currentUser = {
-                name: name,
-                email: email,
-                bio: bio || 'New member of the EcoQuest community'
-            };
-
-            closeModal('signupModal');
-            updateNavigation();
-            showNotification('Account created successfully! Welcome to EcoQuest!');
+            // Firebase signup
+            const auth = getAuth();
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // Signed up
+                    const user = userCredential.user;
+                    currentUser = {
+                        name: name,
+                        email: email,
+                        bio: bio || 'New member of the EcoQuest community'
+                    };
+                    closeModal('signupModal');
+                    updateNavigation();
+                    showNotification('Account created successfully! Welcome to EcoQuest!');
+                })
+                .catch((error) => {
+                    showNotification(error.message);
+                });
         }
 
         function updateNavigation() {
             const navLinks = document.querySelector('.nav-links');
             if (currentUser) {
                 navLinks.innerHTML = `
-                    <a href="#" onclick="showProfile()"><i class="fas fa-user"></i> ${currentUser.name}</a>
-                    <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    <a href="#" class="profile-btn"><i class="fas fa-user"></i> ${currentUser.name}</a>
+                    <a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 `;
             } else {
                 navLinks.innerHTML = `
-                    <a href="#" onclick="showLogin()"><i class="fas fa-sign-in-alt"></i> Login</a>
-                    <a href="#" onclick="showSignup()"><i class="fas fa-user-plus"></i> Sign Up</a>
-                    <a href="#" onclick="showProfile()"><i class="fas fa-user"></i> Profile</a>
+                    <a href="#" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+                    <a href="#" class="signup-btn"><i class="fas fa-user-plus"></i> Sign Up</a>
+                    <a href="#" class="profile-btn"><i class="fas fa-user"></i> Profile</a>
                 `;
             }
+
+            // Attach event listeners for navigation buttons
+            const loginBtn = navLinks.querySelector('.login-btn');
+            if (loginBtn) loginBtn.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+            const signupBtn = navLinks.querySelector('.signup-btn');
+            if (signupBtn) signupBtn.addEventListener('click', (e) => { e.preventDefault(); showSignup(); });
+            const profileBtn = navLinks.querySelector('.profile-btn');
+            if (profileBtn) profileBtn.addEventListener('click', (e) => { e.preventDefault(); showProfile(); });
+            const logoutBtn = navLinks.querySelector('.logout-btn');
+            if (logoutBtn) logoutBtn.addEventListener('click', (e) => { e.preventDefault(); logout(); });
         }
 
         function logout() {
-            currentUser = null;
-            updateNavigation();
-            showNotification('Logged out successfully');
+            const auth = getAuth();
+            signOut(auth)
+                .then(() => {
+                    currentUser = null;
+                    updateNavigation();
+                    showNotification('Logged out successfully');
+                })
+                .catch((error) => {
+                    showNotification(error.message);
+                });
         }
 
         function showNotification(message) {
@@ -1351,6 +1422,9 @@
                 `;
             }
         });
+
+
+
     </script>
 </body>
 </html>
