@@ -838,6 +838,10 @@
                     <label for="signupBio">Bio (Optional)</label>
                     <textarea id="signupBio" placeholder="Tell us about yourself..."></textarea>
                 </div>
+                <div class="form-group">
+                    <label for="signupProfilePic">Profile Picture (optional)</label>
+                    <input type="file" id="signupProfilePic" accept="image/*">
+                </div>
                 <div style="text-align: center; margin-bottom: 1rem;">
                     <button type="submit" class="btn-primary" style="width: 100%;">Create Account</button>
                 </div>
@@ -879,6 +883,7 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-storage.js";
         // TODO: Add SDKs for Firebase products that you want to use
         // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -1107,7 +1112,7 @@ let editingQuestionId = null;
             }
             card.innerHTML = `
                 <div class="user-info" style="display:flex; align-items:center;">
-                    <div class="avatar">${question.authorInitials}</div>
+                    <div class="avatar">${question.authorPhotoURL ? `<img src="${question.authorPhotoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : question.authorInitials}</div>
                     <div class="user-details">
                         <div class="username">${question.author} ${adminEditedBadge}</div>
                         <div class="timestamp">${formatDateDMY(question.timestamp)}</div>
@@ -1138,7 +1143,7 @@ let editingQuestionId = null;
                     </div>
                     <div class="stats">${question.views} views</div>
                 </div>
-                <button class="show-answers-btn" data-qid="${qid}" style="display:${(question.replies && question.replies.length > 0) ? 'block' : 'none'}">
+                <button class="show-answers-btn" data-qid="${qid}" style="display:${(question.replies && question.replies.length > 0) ? 'block' : 'block'}">
                     <i class="fas fa-chevron-down"></i> Show ${(question.replies ? question.replies.length : 0)} Answer${(question.replies && question.replies.length > 1) ? 's' : ''}
                 </button>
                 <div class="answers-container" id="answers-${qid}">
@@ -1157,6 +1162,7 @@ let editingQuestionId = null;
         }
 
         function createAnswersHTML(replies, qid, question) {
+            console.log('createAnswersHTML called for qid:', qid, 'replies:', replies);
             return replies.map((reply, idx) => {
                 // User edit button for answer
                 let userEditBtn = '';
@@ -1182,7 +1188,7 @@ let editingQuestionId = null;
                 <div class=\"answer-card\">
                     <div class=\"answer-header\">
                         <div class=\"user-info\">
-                            <div class=\"avatar\">${reply.authorInitials}</div>
+                            <div class=\"avatar\">${reply.authorPhotoURL ? `<img src="${reply.authorPhotoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : reply.authorInitials}</div>
                             <div class=\"user-details\">
                                 <div class=\"username\">${reply.author}</div>
                                 <div class=\"timestamp\">${formatDateDMY(reply.timestamp)}</div>
@@ -1223,6 +1229,13 @@ let editingQuestionId = null;
                     showEditReplyModal(qid, replyId);
                 });
             });
+            // Always attach show-answers-btn and toggle-answers-btn listeners
+    document.querySelectorAll('.toggle-answers-btn, .show-answers-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const qid = this.getAttribute('data-qid');
+            toggleAnswers(qid, this);
+        });
+    });
             // Admin reply menu logic
     if (isAdmin) {
         document.querySelectorAll('.admin-reply-menu-btn').forEach(btn => {
@@ -1479,6 +1492,8 @@ let editingQuestionId = null;
             getDoc(questionDocRef)
                 .then((docSnap) => {
                     if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        console.log('submitReply existing replies:', data.replies);
                         const newReply = {
                             id: Date.now(),
                             content: replyText,
@@ -1489,8 +1504,9 @@ let editingQuestionId = null;
                             upvotes: 0,
                             downvotes: 0
                         };
+                        let updatedReplies = Array.isArray(data.replies) ? [...data.replies, newReply] : [newReply];
                         updateDoc(questionDocRef, {
-                            replies: arrayUnion(newReply)
+                            replies: updatedReplies
                         }).then(() => {
                             document.getElementById(`replyText-${questionId}`).value = '';
                             loadQuestions();
@@ -1681,38 +1697,43 @@ let editingQuestionId = null;
             const email = document.getElementById('signupEmail').value;
             const password = document.getElementById('signupPassword').value;
             const bio = document.getElementById('signupBio').value;
+            const profilePicFile = document.getElementById('signupProfilePic').files[0];
 
-            // Firebase signup
             const auth = getAuth();
             createUserWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
-                    // Signed up
                     const user = userCredential.user;
-                    // Set displayName in Firebase Auth profile
-                    if (user && user.updateProfile) {
-                        user.updateProfile({ displayName: name })
-                            .then(() => {
-                                currentUser = {
-                                    name: name,
-                                    email: email,
-                                    bio: bio || 'New member of the EcoQuest community'
-                                };
-                                closeModal('signupModal');
-                                updateNavigation();
-                                showNotification('Account created successfully! Welcome to EcoQuest!');
-                            })
-                            .catch((error) => {
-                                showNotification('Signup succeeded, but failed to set name: ' + error.message);
+                    // Upload profile picture if provided
+                    if (profilePicFile) {
+                        const storage = getStorage();
+                        const picRef = storageRef(storage, `profilePics/${user.uid}`);
+                        uploadBytes(picRef, profilePicFile).then(() => {
+                            getDownloadURL(picRef).then((url) => {
+                                user.updateProfile({ displayName: name, photoURL: url }).then(() => {
+                                    currentUser = {
+                                        name: name,
+                                        email: email,
+                                        bio: bio || 'New member of the EcoQuest community',
+                                        photoURL: url
+                                    };
+                                    closeModal('signupModal');
+                                    updateNavigation();
+                                    showNotification('Account created successfully!');
+                                });
                             });
+                        });
                     } else {
-                        currentUser = {
-                            name: name,
-                            email: email,
-                            bio: bio || 'New member of the EcoQuest community'
-                        };
-                        closeModal('signupModal');
-                        updateNavigation();
-                        showNotification('Account created successfully! Welcome to EcoQuest!');
+                        user.updateProfile({ displayName: name }).then(() => {
+                            currentUser = {
+                                name: name,
+                                email: email,
+                                bio: bio || 'New member of the EcoQuest community',
+                                photoURL: null
+                            };
+                            closeModal('signupModal');
+                            updateNavigation();
+                            showNotification('Account created successfully!');
+                        });
                     }
                 })
                 .catch((error) => {
@@ -1737,7 +1758,6 @@ let editingQuestionId = null;
                 navLinks.innerHTML = `
                     <a href="#" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
                     <a href="#" class="signup-btn"><i class="fas fa-user-plus"></i> Sign Up</a>
-                    <a href="#" class="profile-btn"><i class="fas fa-user"></i> Profile</a>
                 `;
             }
 
