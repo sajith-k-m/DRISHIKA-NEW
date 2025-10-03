@@ -762,38 +762,7 @@
 
             <div class="card leaderboard-widget">
                 <h3><i class="fas fa-trophy"></i> Top Contributors</h3>
-                <div class="leaderboard-item">
-                    <span class="rank">1</span>
-                    <div class="avatar">DR</div>
-                    <div>
-                        <div class="username">Dr. Rajesh Kumar</div>
-                        <div class="points">2,450 pts</div>
-                    </div>
-                </div>
-                <div class="leaderboard-item">
-                    <span class="rank">2</span>
-                    <div class="avatar">PM</div>
-                    <div>
-                        <div class="username">Priya Menon</div>
-                        <div class="points">1,876 pts</div>
-                    </div>
-                </div>
-                <div class="leaderboard-item">
-                    <span class="rank">3</span>
-                    <div class="avatar">AS</div>
-                    <div>
-                        <div class="username">Arjun Sasi</div>
-                        <div class="points">1,523 pts</div>
-                    </div>
-                </div>
-                <div class="leaderboard-item">
-                    <span class="rank">4</span>
-                    <div class="avatar">NK</div>
-                    <div>
-                        <div class="username">Nisha Krishnan</div>
-                        <div class="points">1,287 pts</div>
-                    </div>
-                </div>
+                <div id="topContributorsList"></div>
             </div>
         </aside>
     </div>
@@ -1270,6 +1239,7 @@ let editingQuestionId = null;
                     attachQuestionEventListeners();
                     attachShareHandlers();
                     updateCategoryCounts(loadedQuestions);
+                    updateTopContributors(loadedQuestions);
                 })
                 .catch((error) => {
                     showNotification('Error loading questions: ' + error.message);
@@ -1429,6 +1399,20 @@ let editingQuestionId = null;
             toggleAnswers(qid, this);
         });
     });
+            // Upvote buttons
+            document.querySelectorAll('.upvote-btn').forEach(btn => {
+                btn.addEventListener('click', function(){
+                    const qid = this.getAttribute('data-qid');
+                    toggleUpvote(qid);
+                });
+            });
+            // Reply submit buttons
+            document.querySelectorAll('.reply-submit-btn').forEach(btn => {
+                btn.addEventListener('click', function(){
+                    const qid = this.getAttribute('data-qid');
+                    submitReply(qid);
+                });
+            });
             // Admin reply menu logic
     if (isAdmin) {
         document.querySelectorAll('.admin-reply-menu-btn').forEach(btn => {
@@ -1470,6 +1454,31 @@ let editingQuestionId = null;
                 const qid = this.getAttribute('data-qid');
                 const replyId = this.getAttribute('data-replyid');
                 showEditReplyModal(qid, replyId, true);
+            });
+        });
+        // Admin question menu
+        document.querySelectorAll('.admin-menu-btn').forEach(btn => {
+            btn.addEventListener('click', function(e){
+                e.stopPropagation();
+                const qid = this.getAttribute('data-qid');
+                document.querySelectorAll('.admin-menu-dropdown').forEach(dd => dd.style.display = 'none');
+                const dd = document.getElementById(`adminMenuDropdown-${qid}`);
+                if (dd) dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+            });
+        });
+        document.addEventListener('click', function(){
+            document.querySelectorAll('.admin-menu-dropdown').forEach(dd => dd.style.display = 'none');
+        });
+        document.querySelectorAll('.delete-question-btn').forEach(btn => {
+            btn.addEventListener('click', function(){
+                const qid = this.getAttribute('data-qid');
+                if (confirm('Delete this question?')) deleteQuestionAsAdmin(qid);
+            });
+        });
+        document.querySelectorAll('.edit-question-btn').forEach(btn => {
+            btn.addEventListener('click', function(){
+                const qid = this.getAttribute('data-qid');
+                showEditQuestionModal(qid);
             });
         });
     }
@@ -1694,6 +1703,7 @@ let editingQuestionId = null;
                             id: Date.now(),
                             content: replyText,
                             author: currentUser.name,
+                            authorUid: currentUser.uid || null,
                             authorPhotoURL: currentUser.photoURL || null,
                             authorInitials: currentUser.name.split(' ').map(n => n[0]).join(''),
                             timestamp: new Date().toISOString(),
@@ -1839,13 +1849,13 @@ let editingQuestionId = null;
                 title: title,
                 content: content,
                 author: currentUser.name,
+                authorUid: currentUser.uid || null,
                 authorInitials: currentUser.name.split(' ').map(n => n[0]).join(''),
                 timestamp: new Date().toISOString(),
                 verified: false,
                 category: category,
                 tags: tags,
                 upvotes: 0,
-                answers: 0,
                 views: 1,
                 bookmarked: false,
                 replies: []
@@ -2164,21 +2174,28 @@ let editingQuestionId = null;
             closeModal('editProfileModal');
         });
 
+        // Edit profile cancel close
+        (function(){
+            const form = document.getElementById('editProfileForm');
+            const cancelBtn = Array.from(form.querySelectorAll('button')).find(b => b.textContent.trim().toLowerCase()==='cancel');
+            if (cancelBtn) cancelBtn.addEventListener('click', function(e){ e.preventDefault(); closeModal('editProfileModal'); });
+        })();
+
         // Leaderboard
         async function openLeaderboard() {
             const usersSnap = await getDocs(collection(db,'users'));
             const users = [];
             usersSnap.forEach(d => users.push(d.data()));
-            // compute points live from questions
+            // compute points live from questions (match by stored uid in question if available, else by name fallback)
             const qsSnap = await getDocs(collection(db,'questions'));
             const uidByName = new Map(users.map(u => [u.name, u.uid]));
             const points = new Map(users.map(u => [u.uid, 0]));
             qsSnap.forEach(qd => {
                 const q = qd.data();
-                const uid = uidByName.get(q.author);
+                const uid = q.authorUid || uidByName.get(q.author);
                 if (uid) points.set(uid, (points.get(uid)||0) + 1);
                 (q.replies||[]).forEach(r => {
-                    const rUid = uidByName.get(r.author);
+                    const rUid = r.authorUid || uidByName.get(r.author);
                     if (rUid) points.set(rUid, (points.get(rUid)||0) + 2);
                 })
             });
@@ -2242,6 +2259,38 @@ let editingQuestionId = null;
                     navigator.clipboard.writeText(url).then(()=> showNotification('Link copied to clipboard'));
                 })
             })
+        }
+
+        // Top Contributors (sidebar) using same points logic
+        async function updateTopContributors(allQuestions) {
+            const usersSnap = await getDocs(collection(db,'users'));
+            const users = [];
+            usersSnap.forEach(d => users.push(d.data()));
+            const uidByName = new Map(users.map(u => [u.name, u.uid]));
+            const points = new Map(users.map(u => [u.uid, 0]));
+            (allQuestions||[]).forEach(q => {
+                const uid = q.authorUid || uidByName.get(q.author);
+                if (uid) points.set(uid, (points.get(uid)||0) + 1);
+                (q.replies||[]).forEach(r => {
+                    const rUid = r.authorUid || uidByName.get(r.author);
+                    if (rUid) points.set(rUid, (points.get(rUid)||0) + 2);
+                });
+            });
+            users.forEach(u => u.points = points.get(u.uid)||0);
+            users.sort((a,b)=> b.points - a.points);
+            const top = users.slice(0, 5);
+            const root = document.getElementById('topContributorsList');
+            if (!root) return;
+            root.innerHTML = top.map((u, idx) => `
+                <div class="leaderboard-item" style="${currentUser && u.uid===currentUser.uid ? 'background: rgba(127,176,105,0.12);' : ''}">
+                    <span class="rank">${idx+1}</span>
+                    <img class="avatar" src="${u.photoURL ? u.photoURL : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.name)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;"/>
+                    <div>
+                        <div class="username">${u.name}</div>
+                        <div class="points">${u.points} pts</div>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function initSingleQuestionView(){
