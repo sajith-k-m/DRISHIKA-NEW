@@ -20,6 +20,20 @@
             --border: #e0e6ed;
             --shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        [data-theme="dark"] {
+            --primary-green: #a7c957;
+            --secondary-green: #7fb069;
+            --light-green: #7fb069;
+            --accent-green: #a7c957;
+            --earth-brown: #6b442c;
+            --light-brown: #b48a64;
+            --background: #0f1a12;
+            --card-bg: #15231a;
+            --text-dark: #e6f0e9;
+            --text-light: #b6c4bc;
+            --border: #223528;
+            --shadow: 0 2px 12px rgba(0,0,0,0.4);
+        }
 
         * {
             margin: 0;
@@ -68,6 +82,54 @@
             gap: 2rem;
             align-items: center;
         }
+
+        .nav-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.6);
+        }
+
+        .hamburger {
+            display: inline-flex;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .hamburger:hover { background: rgba(255,255,255,0.15); }
+        .hamburger span {
+            width: 20px;
+            height: 2px;
+            background: #fff;
+            display: block;
+        }
+
+        .menu-card {
+            position: absolute;
+            right: 10px;
+            top: 60px;
+            background: var(--card-bg);
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            width: 320px;
+            transform: translateY(-8px) scale(0.98);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 160ms ease;
+            overflow: hidden;
+            z-index: 1600;
+        }
+        .menu-card.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+        .menu-header { display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid var(--border); }
+        .menu-items { display:flex; flex-direction:column; padding:6px; }
+        .menu-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:pointer; }
+        .menu-item:hover { background: rgba(127,176,105,0.12); }
 
         .nav-links a {
             color: #FFFFFF; /* Pure White */
@@ -635,6 +697,25 @@
         </div>
     </nav>
 
+    <!-- Menu Card -->
+    <div id="menuCard" class="menu-card">
+        <div class="menu-header">
+            <img id="menuAvatar" class="nav-avatar" src="" alt="avatar">
+            <div>
+                <div id="menuName" style="font-weight:600"></div>
+                <div id="menuEmail" style="font-size:0.85rem; color:var(--text-light)"></div>
+            </div>
+            <button id="menuCloseBtn" style="margin-left:auto; background:none; border:none; cursor:pointer; color:var(--text-light)"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="menu-items">
+            <div class="menu-item" id="menuProfile"><i class="fas fa-id-card"></i> Profile</div>
+            <div class="menu-item" id="menuEditProfile"><i class="fas fa-user-edit"></i> Update / Add details</div>
+            <div class="menu-item" id="menuLeaderboard"><i class="fas fa-trophy"></i> Leaderboard</div>
+            <div class="menu-item" id="menuDarkMode"><i class="fas fa-moon"></i> Toggle Dark Mode</div>
+            <div class="menu-item" id="menuLogout"><i class="fas fa-sign-out-alt"></i> Logout</div>
+        </div>
+    </div>
+
     <div class="container">
         <main class="main-content">
             <button class="ask-question-btn" id="askQuestionBtn">
@@ -876,13 +957,92 @@
         </div>
     </div>
 
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--primary-green); margin-bottom: 1rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-id-card"></i> Profile</h2>
+            <div style="display:flex; gap:16px; align-items:flex-start;">
+                <img id="profileAvatar" src="" style="width:90px; height:90px; border-radius:50%; object-fit:cover; border:2px solid var(--border);" alt="avatar">
+                <div style="flex:1;">
+                    <div id="profileName" style="font-size:1.25rem; font-weight:700;"></div>
+                    <div id="profileEmail" style="color:var(--text-light);"></div>
+                    <div id="profileRank" style="margin-top:6px;"></div>
+                    <div id="profileTopCategory" style="margin-top:4px; color:var(--secondary-green);"></div>
+                </div>
+            </div>
+            <div style="margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div><strong>Age</strong><div id="profileAge">-</div></div>
+                <div><strong>Qualifications</strong><div id="profileQualifications">-</div></div>
+                <div><strong>Interests</strong><div id="profileInterests">-</div></div>
+                <div><strong>Skills</strong><div id="profileSkills">-</div></div>
+                <div style="grid-column:1 / -1"><strong>Bio</strong><div id="profileBio">-</div></div>
+            </div>
+            <div style="margin-top:14px;">
+                <div style="font-weight:600; margin-bottom:6px;">Connect via</div>
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <a id="linkLinkedIn" href="#" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:6px;"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                    <a id="linkInstagram" href="#" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:6px;"><i class="fab fa-instagram"></i> Instagram</a>
+                    <a id="linkFacebook" href="#" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:6px;"><i class="fab fa-facebook"></i> Facebook</a>
+                    <a id="linkGithub" href="#" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:6px;"><i class="fab fa-github"></i> GitHub</a>
+                </div>
+            </div>
+            <div style="text-align:right; margin-top:16px;"><button class="btn-secondary" onclick="closeModal('profileModal')">Close</button></div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--primary-green); margin-bottom: 1rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-user-edit"></i> Update / Add details</h2>
+            <form id="editProfileForm">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                    <img id="editAvatarPreview" src="" style="width:68px; height:68px; border-radius:50%; object-fit:cover; border:2px solid var(--border);" alt="avatar">
+                    <input type="file" id="editAvatarFile" accept="image/*">
+                </div>
+                <div class="form-group"><label>Name</label><input type="text" id="editName" required></div>
+                <div class="form-group"><label>Age</label><input type="number" id="editAge" min="0"></div>
+                <div class="form-group"><label>Qualifications</label><input type="text" id="editQualifications" placeholder="e.g., BSc Forestry"></div>
+                <div class="form-group"><label>Interests</label><input type="text" id="editInterests" placeholder="comma-separated"></div>
+                <div class="form-group"><label>Skills</label><input type="text" id="editSkills" placeholder="comma-separated"></div>
+                <div class="form-group"><label>Bio</label><textarea id="editBio"></textarea></div>
+                <div class="form-group"><label>LinkedIn URL</label><input type="url" id="editLinkedIn" placeholder="https://..."></div>
+                <div class="form-group"><label>Instagram URL</label><input type="url" id="editInstagram" placeholder="https://..."></div>
+                <div class="form-group"><label>Facebook URL</label><input type="url" id="editFacebook" placeholder="https://..."></div>
+                <div class="form-group"><label>GitHub URL</label><input type="url" id="editGithub" placeholder="https://..."></div>
+                <div style="text-align:right">
+                    <button type="button" class="btn-secondary" onclick="closeModal('editProfileModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboardModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--primary-green); margin-bottom: 0.5rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-trophy"></i> Leaderboard</h2>
+            <div style="color:var(--text-light); margin-bottom:12px;">Rules: +1 per question, +2 per answer</div>
+            <div id="leaderboardList"></div>
+            <div style="text-align:right; margin-top:12px;"><button class="btn-secondary" onclick="closeModal('leaderboardModal')">Close</button></div>
+        </div>
+    </div>
+
+    <!-- Admin Profiles Modal -->
+    <div id="adminProfilesModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--primary-green); margin-bottom: 0.5rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-users"></i> User Profiles</h2>
+            <div id="adminUsersList" style="max-height:50vh; overflow:auto; border:1px solid var(--border); border-radius:8px;"></div>
+            <div style="text-align:right; margin-top:12px;"><button class="btn-secondary" onclick="closeModal('adminProfilesModal')">Close</button></div>
+        </div>
+    </div>
+
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
-import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, where } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-storage.js";
         // TODO: Add SDKs for Firebase products that you want to use
         // https://firebase.google.com/docs/web/setup#available-libraries
@@ -925,22 +1085,39 @@ let editingQuestionId = null;
         document.addEventListener('DOMContentLoaded', function() {
             // Listen to Firebase Auth state ONCE on page load
             const auth = getAuth();
-            onAuthStateChanged(auth, (user) => {
+            onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    currentUser = {
-                        name: user.displayName || (user.email ? user.email.split('@')[0] : 'User'),
-                        email: user.email,
-                        bio: 'Nature enthusiast and environmental science student'
-                    };
-                    isAdmin = false;
+                    const userRef = doc(db, 'users', user.uid);
+                    const snap = await getDoc(userRef);
+                    if (!snap.exists()) {
+                        await setDoc(userRef, {
+                            uid: user.uid,
+                            name: user.displayName || (user.email ? user.email.split('@')[0] : 'User'),
+                            email: user.email,
+                            bio: 'Nature enthusiast and environmental science student',
+                            photoURL: user.photoURL || null,
+                            age: null,
+                            qualifications: '',
+                            interests: '',
+                            skills: '',
+                            links: { linkedin: '', instagram: '', facebook: '', github: '' },
+                            points: 0,
+                            topCategory: ''
+                        });
+                    }
+                    const data = (await getDoc(userRef)).data();
+                    currentUser = data;
+                    isAdmin = (user.email && user.email.endsWith('@admin.com')) ? true : isAdmin;
                 } else {
                     currentUser = null;
                     isAdmin = false;
                 }
                 updateNavigation();
+                updateMenuCard();
             });
             loadQuestions();
             setupEventListeners();
+            initSingleQuestionView();
         });
 
 
@@ -1013,7 +1190,24 @@ let editingQuestionId = null;
                 if (e.target.classList.contains('modal')) {
                     e.target.classList.remove('active');
                 }
+                // Close menu when clicking outside
+                const menu = document.getElementById('menuCard');
+                const burger = document.getElementById('hamburgerBtn');
+                if (menu && menu.classList.contains('show')) {
+                    if (!menu.contains(e.target) && (!burger || !burger.contains(e.target))) {
+                        closeMenu();
+                    }
+                }
             });
+
+            // Menu card actions
+            document.getElementById('menuProfile').addEventListener('click', () => { closeMenu(); openProfile(); });
+            document.getElementById('menuEditProfile').addEventListener('click', () => { closeMenu(); openEditProfile(); });
+            document.getElementById('menuLeaderboard').addEventListener('click', () => { closeMenu(); openLeaderboard(); });
+            document.getElementById('menuDarkMode').addEventListener('click', () => { toggleDarkMode(); });
+            document.getElementById('menuLogout').addEventListener('click', (e) => { e.preventDefault(); closeMenu(); logout(); });
+            const menuCloseBtn = document.getElementById('menuCloseBtn');
+            if (menuCloseBtn) menuCloseBtn.addEventListener('click', closeMenu);
         }
 
         // Show admin login modal from anywhere (for demo, add to nav)
@@ -1056,13 +1250,13 @@ let editingQuestionId = null;
                     // Apply filters
                     switch(currentFilter) {
                         case 'trending':
-                            filteredQuestions.sort((a, b) => (b.upvotes + b.answers) - (a.upvotes + a.answers));
+                            filteredQuestions.sort((a, b) => ((b.replies ? b.replies.length : 0)) - ((a.replies ? a.replies.length : 0)));
                             break;
                         case 'verified':
-                            filteredQuestions = filteredQuestions.filter(q => q.verified);
+                            filteredQuestions = filteredQuestions.filter(q => q.editedByAdmin);
                             break;
                         case 'unanswered':
-                            filteredQuestions = filteredQuestions.filter(q => q.answers === 0);
+                            filteredQuestions = filteredQuestions.filter(q => !q.replies || q.replies.length === 0);
                             break;
                         default:
                             filteredQuestions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -1074,6 +1268,8 @@ let editingQuestionId = null;
 
                     // Attach event listeners for all Q&A actions
                     attachQuestionEventListeners();
+                    attachShareHandlers();
+                    updateCategoryCounts(loadedQuestions);
                 })
                 .catch((error) => {
                     showNotification('Error loading questions: ' + error.message);
@@ -1133,15 +1329,12 @@ let editingQuestionId = null;
                         <button class="action-btn toggle-answers-btn" data-qid="${qid}">
                             <i class="fas fa-comment"></i> <span class="answer-count">${(question.replies ? question.replies.length : 0)}</span> Answers
                         </button>
-                        <button class="action-btn bookmark-btn" data-qid="${qid}">
-                            <i class="fas fa-bookmark${question.bookmarked ? '' : '-o'}"></i> <span class="bookmark-label">${question.bookmarked ? 'Saved' : 'Save'}</span>
-                        </button>
-                        <button class="action-btn share-btn">
+                        <button class="action-btn share-btn" data-qid="${qid}">
                             <i class="fas fa-share"></i> Share
                         </button>
                         ${userEditBtn}
                     </div>
-                    <div class="stats">${question.views} views</div>
+                    <div class="stats"></div>
                 </div>
                 <button class="show-answers-btn" data-qid="${qid}" style="display:${(question.replies && question.replies.length > 0) ? 'block' : 'block'}">
                     <i class="fas fa-chevron-down"></i> Show ${(question.replies ? question.replies.length : 0)} Answer${(question.replies && question.replies.length > 1) ? 's' : ''}
@@ -1345,8 +1538,10 @@ let editingQuestionId = null;
         function filterQuestions(filter) {
             // Update active tab
             document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
-            
+            const tabs = Array.from(document.querySelectorAll('.filter-tab'));
+            const idxMap = { newest:0, trending:1, verified:2, unanswered:3 };
+            const idx = idxMap[filter];
+            if (idx != null && tabs[idx]) tabs[idx].classList.add('active');
             currentFilter = filter;
             loadQuestions();
         }
@@ -1366,6 +1561,7 @@ let editingQuestionId = null;
                     filteredQuestions.forEach(question => {
                         container.appendChild(createQuestionCard(question));
                     });
+                    updateCategoryCounts(loadedQuestions);
                 })
                 .catch((error) => {
                     showNotification('Error loading questions: ' + error.message);
@@ -1377,7 +1573,7 @@ let editingQuestionId = null;
                 loadQuestions();
                 return;
             }
-            // Fetch all questions and filter client-side
+            // Fetch all questions and filter client-side across titles, content, tags, authors, replies
             const q = query(collection(db, 'questions'), orderBy('timestamp', 'desc'));
             getDocs(q)
                 .then((querySnapshot) => {
@@ -1385,11 +1581,11 @@ let editingQuestionId = null;
                     querySnapshot.forEach((doc) => {
                         loadedQuestions.push({ id: doc.id, ...doc.data() });
                     });
-                    const filteredQuestions = loadedQuestions.filter(q => 
-                        q.title.toLowerCase().includes(query) ||
-                        q.content.toLowerCase().includes(query) ||
-                        (q.tags && q.tags.some(tag => tag.toLowerCase().includes(query)))
-                    );
+                    const filteredQuestions = loadedQuestions.filter(q => {
+                        const inQuestion = (q.title || '').toLowerCase().includes(query) || (q.content || '').toLowerCase().includes(query) || (q.author || '').toLowerCase().includes(query) || (q.tags && q.tags.some(tag => (tag||'').toLowerCase().includes(query)));
+                        const inReplies = (q.replies||[]).some(r => (r.content||'').toLowerCase().includes(query) || (r.author||'').toLowerCase().includes(query));
+                        return inQuestion || inReplies;
+                    });
                     const container = document.getElementById('questionsContainer');
                     container.innerHTML = '';
                     filteredQuestions.forEach(question => {
@@ -1498,6 +1694,7 @@ let editingQuestionId = null;
                             id: Date.now(),
                             content: replyText,
                             author: currentUser.name,
+                            authorPhotoURL: currentUser.photoURL || null,
                             authorInitials: currentUser.name.split(' ').map(n => n[0]).join(''),
                             timestamp: new Date().toISOString(),
                             verified: false,
@@ -1584,7 +1781,7 @@ let editingQuestionId = null;
                 showLogin();
                 return;
             }
-            showNotification('Profile feature coming soon!');
+            openProfile();
         }
 
         function closeModal(modalId) {
@@ -1666,6 +1863,60 @@ let editingQuestionId = null;
                 });
         }
 
+        function handleAuthError(error, context) {
+            let message = '';
+            let showLoginLink = false;
+            
+            switch(error.code) {
+                case 'auth/email-already-in-use':
+                    message = 'This email is already registered. ';
+                    showLoginLink = true;
+                    break;
+                case 'auth/weak-password':
+                    message = 'Password should be at least 6 characters long.';
+                    break;
+                case 'auth/invalid-email':
+                    message = 'Please enter a valid email address.';
+                    break;
+                case 'auth/user-not-found':
+                    message = 'No account found with this email address.';
+                    break;
+                case 'auth/wrong-password':
+                    message = 'Incorrect password. Please try again.';
+                    break;
+                case 'auth/user-disabled':
+                    message = 'This account has been disabled.';
+                    break;
+                case 'auth/too-many-requests':
+                    message = 'Too many failed attempts. Please try again later.';
+                    break;
+                case 'auth/network-request-failed':
+                    message = 'Network error. Please check your connection.';
+                    break;
+                default:
+                    message = error.message || 'An error occurred. Please try again.';
+            }
+            
+            if (showLoginLink && context === 'signup') {
+                // Create a custom notification with login link
+                const notification = document.getElementById('notification');
+                notification.innerHTML = `
+                    ${message}
+                    <a href="#" onclick="closeModal('signupModal'); showLogin(); return false;" 
+                       style="color: white; text-decoration: underline; font-weight: bold;">
+                        Try logging in instead
+                    </a>
+                `;
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    notification.innerHTML = ''; // Reset to text content
+                }, 5000); // Show longer for actionable message
+            } else {
+                showNotification(message);
+            }
+        }
+
         function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value;
@@ -1687,7 +1938,7 @@ let editingQuestionId = null;
                     showNotification('Welcome back!');
                 })
                 .catch((error) => {
-                    showNotification(error.message);
+                    handleAuthError(error, 'login');
                 });
         }
 
@@ -1710,34 +1961,30 @@ let editingQuestionId = null;
                         uploadBytes(picRef, profilePicFile).then(() => {
                             getDownloadURL(picRef).then((url) => {
                                 user.updateProfile({ displayName: name, photoURL: url }).then(() => {
-                                    currentUser = {
-                                        name: name,
-                                        email: email,
-                                        bio: bio || 'New member of the EcoQuest community',
-                                        photoURL: url
-                                    };
+                                    const userData = { uid: user.uid, name, email, bio: bio || 'New member of the EcoQuest community', photoURL: url, age: null, qualifications: '', interests: '', skills: '', links: { linkedin:'', instagram:'', facebook:'', github:'' }, points: 0, topCategory: '' };
+                                    setDoc(doc(db,'users',user.uid), userData, { merge: true });
+                                    currentUser = userData;
                                     closeModal('signupModal');
                                     updateNavigation();
+                                    updateMenuCard();
                                     showNotification('Account created successfully!');
                                 });
                             });
                         });
                     } else {
                         user.updateProfile({ displayName: name }).then(() => {
-                            currentUser = {
-                                name: name,
-                                email: email,
-                                bio: bio || 'New member of the EcoQuest community',
-                                photoURL: null
-                            };
+                            const userData = { uid: user.uid, name, email, bio: bio || 'New member of the EcoQuest community', photoURL: null, age: null, qualifications: '', interests: '', skills: '', links: { linkedin:'', instagram:'', facebook:'', github:'' }, points: 0, topCategory: '' };
+                            setDoc(doc(db,'users',user.uid), userData, { merge: true });
+                            currentUser = userData;
                             closeModal('signupModal');
                             updateNavigation();
+                            updateMenuCard();
                             showNotification('Account created successfully!');
                         });
                     }
                 })
                 .catch((error) => {
-                    showNotification(error.message);
+                    handleAuthError(error, 'signup');
                 });
         }
 
@@ -1747,12 +1994,14 @@ let editingQuestionId = null;
             if (isAdmin) {
                 navLinks.innerHTML = `
                     <a href="#" class="admin-dashboard-btn"><i class="fas fa-user-shield"></i> Admin Dashboard</a>
-                    <a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    <a href="#" class="admin-profiles-btn"><i class="fas fa-users"></i> Profiles</a>
+                    <img class="nav-avatar" id="navAvatar" src="${(currentUser && currentUser.photoURL) ? currentUser.photoURL : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser ? currentUser.name : 'User') }" alt="avatar"/>
+                    <span class="hamburger" id="hamburgerBtn"><span></span><span></span><span></span></span>
                 `;
             } else if (currentUser) {
                 navLinks.innerHTML = `
-                    <a href="#" class="profile-btn"><i class="fas fa-user"></i> ${currentUser.name}</a>
-                    <a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    <a href="#" class="profile-btn"><img class="nav-avatar" id="navAvatar" src="${currentUser.photoURL ? currentUser.photoURL : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser.name)}" alt="avatar"/> ${currentUser.name}</a>
+                    <span class="hamburger" id="hamburgerBtn"><span></span><span></span><span></span></span>
                 `;
             } else {
                 navLinks.innerHTML = `
@@ -1767,13 +2016,15 @@ let editingQuestionId = null;
             const signupBtn = navLinks.querySelector('.signup-btn');
             if (signupBtn) signupBtn.addEventListener('click', (e) => { e.preventDefault(); showSignup(); });
             const profileBtn = navLinks.querySelector('.profile-btn');
-            if (profileBtn) profileBtn.addEventListener('click', (e) => { e.preventDefault(); showProfile(); });
-            const logoutBtn = navLinks.querySelector('.logout-btn');
-            if (logoutBtn) logoutBtn.addEventListener('click', (e) => { e.preventDefault(); logout(); });
+            if (profileBtn) profileBtn.addEventListener('click', (e) => { e.preventDefault(); openProfile(); });
+            const burger = navLinks.querySelector('#hamburgerBtn');
+            if (burger) burger.addEventListener('click', toggleMenu);
             // Removed admin-login-btn from nav, so no event listener needed
             const adminDashboardBtn = navLinks.querySelector('.admin-dashboard-btn');
             if (adminDashboardBtn) adminDashboardBtn.addEventListener('click', (e) => { e.preventDefault(); showAdminDashboard(); });
-
+            const adminProfilesBtn = navLinks.querySelector('.admin-profiles-btn');
+            if (adminProfilesBtn) adminProfilesBtn.addEventListener('click', async (e) => { e.preventDefault(); await openAdminProfiles(); });
+            
             // When admin logs in or dashboard is opened, reload questions to show admin menus
             if (isAdmin) {
                 loadQuestions();
@@ -1808,6 +2059,205 @@ let editingQuestionId = null;
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 3000);
+        }
+
+        // Menu helpers
+        function toggleMenu() {
+            const card = document.getElementById('menuCard');
+            card.classList.toggle('show');
+            updateMenuCard();
+        }
+        function closeMenu() { document.getElementById('menuCard').classList.remove('show'); }
+        function updateMenuCard() {
+            const avatar = document.getElementById('menuAvatar');
+            const nameEl = document.getElementById('menuName');
+            const emailEl = document.getElementById('menuEmail');
+            if (!avatar || !nameEl || !emailEl) return;
+            if (currentUser) {
+                avatar.src = currentUser.photoURL ? currentUser.photoURL : `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name||'User')}`;
+                nameEl.textContent = currentUser.name || 'User';
+                emailEl.textContent = currentUser.email || '';
+            } else {
+                avatar.src = `https://ui-avatars.com/api/?name=Guest`;
+                nameEl.textContent = 'Guest';
+                emailEl.textContent = '';
+            }
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        }
+
+        // Profile modal
+        async function openProfile() {
+            if (!currentUser) { showLogin(); return; }
+            const avatar = document.getElementById('profileAvatar');
+            avatar.src = currentUser.photoURL ? currentUser.photoURL : `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name||'User')}`;
+            document.getElementById('profileName').textContent = currentUser.name||'';
+            document.getElementById('profileEmail').textContent = currentUser.email||'';
+            document.getElementById('profileBio').textContent = currentUser.bio||'-';
+            document.getElementById('profileAge').textContent = currentUser.age ?? '-';
+            document.getElementById('profileQualifications').textContent = currentUser.qualifications||'-';
+            document.getElementById('profileInterests').textContent = currentUser.interests||'-';
+            document.getElementById('profileSkills').textContent = currentUser.skills||'-';
+            document.getElementById('profileTopCategory').textContent = currentUser.topCategory ? `Most contributed category: ${currentUser.topCategory}` : '';
+            // links
+            const L = (currentUser.links||{});
+            document.getElementById('linkLinkedIn').href = L.linkedin || '#';
+            document.getElementById('linkInstagram').href = L.instagram || '#';
+            document.getElementById('linkFacebook').href = L.facebook || '#';
+            document.getElementById('linkGithub').href = L.github || '#';
+            document.getElementById('profileModal').classList.add('active');
+        }
+
+        async function openEditProfile() {
+            if (!currentUser) { showLogin(); return; }
+            document.getElementById('editAvatarPreview').src = currentUser.photoURL ? currentUser.photoURL : `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name||'User')}`;
+            document.getElementById('editName').value = currentUser.name||'';
+            document.getElementById('editAge').value = currentUser.age||'';
+            document.getElementById('editQualifications').value = currentUser.qualifications||'';
+            document.getElementById('editInterests').value = currentUser.interests||'';
+            document.getElementById('editSkills').value = currentUser.skills||'';
+            document.getElementById('editBio').value = currentUser.bio||'';
+            const L = currentUser.links||{};
+            document.getElementById('editLinkedIn').value = L.linkedin||'';
+            document.getElementById('editInstagram').value = L.instagram||'';
+            document.getElementById('editFacebook').value = L.facebook||'';
+            document.getElementById('editGithub').value = L.github||'';
+            document.getElementById('editProfileModal').classList.add('active');
+        }
+
+        // Save profile edits
+        document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+            const uid = currentUser.uid;
+            const updates = {
+                name: document.getElementById('editName').value.trim(),
+                age: document.getElementById('editAge').value ? Number(document.getElementById('editAge').value) : null,
+                qualifications: document.getElementById('editQualifications').value.trim(),
+                interests: document.getElementById('editInterests').value.trim(),
+                skills: document.getElementById('editSkills').value.trim(),
+                bio: document.getElementById('editBio').value.trim(),
+                links: {
+                    linkedin: document.getElementById('editLinkedIn').value.trim(),
+                    instagram: document.getElementById('editInstagram').value.trim(),
+                    facebook: document.getElementById('editFacebook').value.trim(),
+                    github: document.getElementById('editGithub').value.trim()
+                }
+            };
+            // optional avatar upload
+            const file = document.getElementById('editAvatarFile').files[0];
+            if (file) {
+                const storage = getStorage();
+                const picRef = storageRef(storage, `profilePics/${uid}`);
+                await uploadBytes(picRef, file);
+                updates.photoURL = await getDownloadURL(picRef);
+            }
+            await updateDoc(doc(db,'users',uid), updates);
+            const snap = await getDoc(doc(db,'users',uid));
+            currentUser = snap.data();
+            updateNavigation();
+            updateMenuCard();
+            showNotification('Profile updated');
+            closeModal('editProfileModal');
+        });
+
+        // Leaderboard
+        async function openLeaderboard() {
+            const usersSnap = await getDocs(collection(db,'users'));
+            const users = [];
+            usersSnap.forEach(d => users.push(d.data()));
+            // compute points live from questions
+            const qsSnap = await getDocs(collection(db,'questions'));
+            const uidByName = new Map(users.map(u => [u.name, u.uid]));
+            const points = new Map(users.map(u => [u.uid, 0]));
+            qsSnap.forEach(qd => {
+                const q = qd.data();
+                const uid = uidByName.get(q.author);
+                if (uid) points.set(uid, (points.get(uid)||0) + 1);
+                (q.replies||[]).forEach(r => {
+                    const rUid = uidByName.get(r.author);
+                    if (rUid) points.set(rUid, (points.get(rUid)||0) + 2);
+                })
+            });
+            users.forEach(u => u.points = points.get(u.uid)||0);
+            users.sort((a,b)=> b.points - a.points);
+            const list = document.getElementById('leaderboardList');
+            list.innerHTML = users.map(u => `<div style="display:flex; align-items:center; gap:10px; padding:8px; border-bottom:1px solid var(--border); ${currentUser && u.uid===currentUser.uid ? 'background: rgba(127,176,105,0.12);' : ''}">
+                <img src="${u.photoURL ? u.photoURL : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.name)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;"/>
+                <div style="flex:1">${u.name}</div>
+                <div style="font-weight:700; color:var(--secondary-green)">${u.points}</div>
+            </div>`).join('');
+            document.getElementById('leaderboardModal').classList.add('active');
+        }
+
+        // Admin profiles list and inspect
+        async function openAdminProfiles() {
+            if (!isAdmin) { showNotification('Admin only'); return; }
+            const usersSnap = await getDocs(collection(db,'users'));
+            const list = document.getElementById('adminUsersList');
+            const items = [];
+            usersSnap.forEach(d => {
+                const u = d.data();
+                items.push(`<div class="menu-item" data-uid="${u.uid}" style="justify-content:flex-start;">
+                    <img src="${u.photoURL ? u.photoURL : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.name)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;"/>
+                    <span>${u.name}</span>
+                </div>`);
+            });
+            list.innerHTML = items.join('');
+            list.querySelectorAll('.menu-item').forEach(el => {
+                el.addEventListener('click', async function(){
+                    const uid = this.getAttribute('data-uid');
+                    const snap = await getDoc(doc(db,'users',uid));
+                    if (snap.exists()) {
+                        const prevUser = currentUser;
+                        const data = snap.data();
+                        // Temporarily show selected user's profile in the same profile modal
+                        const tmp = currentUser; currentUser = data; await openProfile(); currentUser = tmp;
+                    }
+                });
+            });
+            document.getElementById('adminProfilesModal').classList.add('active');
+        }
+
+        // Category counts from loaded questions
+        function updateCategoryCounts(allQuestions) {
+            const counts = allQuestions.reduce((acc,q)=>{ const key=(q.category||'').toLowerCase(); acc[key] = (acc[key]||0)+1; return acc; },{});
+            const items = document.querySelectorAll('.category-list li');
+            items.forEach(li => {
+                const label = li.childNodes[0].textContent.trim().toLowerCase();
+                const span = li.querySelector('.category-count');
+                if (span) span.textContent = counts[label] || 0;
+            });
+        }
+
+        // Share link support + single question view
+        function attachShareHandlers() {
+            document.querySelectorAll('.share-btn').forEach(btn => {
+                btn.addEventListener('click', function(){
+                    const qid = this.getAttribute('data-qid');
+                    const url = `${location.origin}${location.pathname}?q=${encodeURIComponent(qid)}`;
+                    navigator.clipboard.writeText(url).then(()=> showNotification('Link copied to clipboard'));
+                })
+            })
+        }
+
+        function initSingleQuestionView(){
+            const params = new URLSearchParams(location.search);
+            const qid = params.get('q');
+            if (!qid) return;
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+            getDoc(doc(db,'questions', qid)).then(snap => {
+                if (snap.exists()) {
+                    container.appendChild(createQuestionCard({ id: snap.id, ...snap.data() }));
+                    attachQuestionEventListeners();
+                } else {
+                    container.innerHTML = '<div class="card">Question not found.</div>';
+                }
+            })
         }
 
         // Infinite scroll simulation
